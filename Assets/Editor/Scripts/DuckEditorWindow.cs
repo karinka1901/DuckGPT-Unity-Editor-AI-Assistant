@@ -1,6 +1,4 @@
-#if UNITY_EDITOR
-using UnityEditor;
-using UnityEditor.PackageManager.UI;
+﻿using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 public class DuckEditorWindow : EditorWindow
@@ -9,11 +7,12 @@ public class DuckEditorWindow : EditorWindow
     public static void DisplayDuckWindow()
     {
         DuckEditorWindow window = GetWindow<DuckEditorWindow>();
-        window.Show();   
+        window.Show();
     }
 
     [HideInInspector] public Image duckImage;
-    [HideInInspector] public Box interactableBox;
+    //[HideInInspector] public Box interactableBox;
+    private VisualElement interactableBox;
 
     private void Awake()
     {
@@ -25,50 +24,56 @@ public class DuckEditorWindow : EditorWindow
         if (iconTexture == null) return;
         else titleContent = new GUIContent("Duck Helper", iconTexture);
     }
-   
+
 
     public void CreateGUI()
     {
-        VisualElement root = rootVisualElement;
- 
-        // Load duck image
+        var root = rootVisualElement;
+
+        var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/Editor/Scripts/DuckHelperStyleSheet.uss");
+        if (styleSheet != null)
+        {
+            root.styleSheets.Add(styleSheet);
+        }
+
+
+        // DUCK IMAGE
         Texture2D duckTexture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/Textures/duck.png");
-        if (duckTexture == null)
+        duckImage = new Image
         {
-            Debug.LogError("Duck image not found at the specified path.");
-            return;
-        }
-        else
-        {
+            image = duckTexture,
+            scaleMode = ScaleMode.ScaleToFit
+        };
 
-            duckImage = new Image { image = duckTexture };
+        root.Add(duckImage);
 
-            root.Add(duckImage);
-        }
-
-        // Create an interactable box
-
-
-
+        // INVISIBLE INTERACTABLE BOX 
+        interactableBox = new VisualElement();
+        root.Add(interactableBox);
     }
 
-    //private void OnGUI()
-    //{
 
-    //   interactableBox.RegisterCallback<MouseEnterEvent>(evt =>
-    //    {
-    //        EditorGUIUtility.AddCursorRect(new Rect(20, 20, 140, 40), MouseCursor.Pan);
-    //      //  Debug.Log("Quack! Quack!");
-    //    });
-    //    interactableBox.RegisterCallback<MouseLeaveEvent>(evt =>
-    //    {
-    //     //  Debug.Log("The duck is quiet now.");
-    //    });
-    //}
+    private void OnGUI()
+    {
+        interactableBox.RegisterCallback<MouseEnterEvent>(evt =>
+        {
+            Debug.Log("Mouse entered duck!");
+        });
 
+        interactableBox.RegisterCallback<MouseLeaveEvent>(evt =>
+        {
+            Debug.Log("Mouse left duck!");
+        });
 
-
+        interactableBox.RegisterCallback<ClickEvent>(evt =>
+        {
+            Debug.Log("Quack!");
+        });
+    }
 }
+
+
+
 //references:
 //Dispplaying an image in an EditorWindow using UIElements: (1)
 //https://docs.unity3d.com/ScriptReference/EditorWindow.html
@@ -76,4 +81,3 @@ public class DuckEditorWindow : EditorWindow
 ///https://medium.com/@dilaura_exp/unity-editor-scripting-series-chapter-3-editor-window-e0d21ddc14dc (2)
 ///
 //https://docs.unity3d.com/6000.2/Documentation/Manual/UIE-ElementRef.html
-#endif

@@ -1,0 +1,26 @@
+.rootVisualContainer {
+    background-color: red;
+    padding: 10px;
+}
+
+.duck-image {
+    width: 200px;
+    height: 200px;
+    border-radius: 10px;
+    border-width: 2px;
+    border-color: #4a90e2;
+}
+
+
+.interactable-box {
+    background-color: rgba(255, 0, 0, 0.1);
+    border-width: 1px;
+    border-color: red;
+    border-radius: 5px;
+}
+
+/* Hover state for interactable box */
+.interactable-box:hover {
+    background-color: rgba(255, 0, 0, 0.3);
+    cursor: link;
+}

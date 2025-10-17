@@ -1,0 +1,27 @@
+/* Style for the root element */
+.unity-editor-window {
+    background-color: #2b2b2b;
+    padding: 10px;
+}
+
+/* Style for the duck image */
+.duck-image {
+    width: 200px;
+    height: 200px;
+    border-radius: 10px;
+    border-width: 2px;
+    border-color: #4a90e2;
+}
+
+/* Style for the interactable box */
+.interactable-box {
+    background-color: rgba(255, 0, 0, 0.1);
+    border-width: 1px;
+    border-color: red;
+    border-radius: 5px;
+}
+
+/* Hover state for interactable box */
+.interactable-box:hover {
+    background-color: rgba(255, 0, 0, 0.3);
+}

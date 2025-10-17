@@ -1,4 +1,0 @@
-<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="project://database/Assets/Editor/AI_Duck.uss?fileID=7433441132597879392&amp;guid=9fbde663d4ad37c468617f88e5caad71&amp;type=3#AI_Duck" />
-    <ui:VisualElement style="flex-grow: 1; background-image: url(&quot;project://database/Assets/duck.png?fileID=2800000&amp;guid=d71941230afb88f4093dbbabac7f8faf&amp;type=3#duck&quot;); width: 594px; background-size: 100% 50%; align-items: auto; justify-content: center; align-self: flex-start; flex-direction: column; overflow: visible; visibility: visible; display: flex;" />
-</ui:UXML>
