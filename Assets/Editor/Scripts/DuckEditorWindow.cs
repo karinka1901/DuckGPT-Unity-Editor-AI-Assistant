@@ -45,10 +45,14 @@ public class DuckEditorWindow : EditorWindow
             scaleMode = ScaleMode.ScaleToFit
         };
 
+        duckImage.name = "duck-image";
+        duckImage.AddToClassList("duck-image");
         root.Add(duckImage);
 
         // INVISIBLE INTERACTABLE BOX 
         interactableBox = new VisualElement();
+        interactableBox.name = "interactable-box";
+        interactableBox.AddToClassList("interactable-box");
         root.Add(interactableBox);
     }
 

@@ -1,4 +1,4 @@
-.rootVisualContainer {
+#rootVisualContainer4 {
     background-color: red;
     padding: 10px;
 }
