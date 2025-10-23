@@ -1,0 +1,35 @@
+#rootVisualContainer4 {
+    background-color: red;
+    padding: 10px;
+}
+
+.duck-image {
+    width: auto;
+
+}
+
+
+#question-input{
+    width: 100%;
+}
+#unity-text-input{
+    width: 100%;
+
+}
+
+.ask-duck-button{
+    background-color: yellow;
+    color: black;
+}
+
+.ask-duck-button:hover{
+    background-color: orange;
+    cursor: link;
+}
+
+#animate-duck-button{
+    position: absolute;
+    height: 50px;
+    width: 50px;
+    cursor: link;
+}
