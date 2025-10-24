@@ -1,5 +1,5 @@
-#rootVisualContainer4 {
-    background-color: red;
+.duck-editor-root {
+    background-color: #d5c6e4;
     padding: 10px;
 }
 
@@ -32,4 +32,25 @@
     height: 50px;
     width: 50px;
     cursor: link;
+}
+
+.box-field {
+        width: 50%;
+    height: 200px;
+    min-height: 100px;
+    max-height: 400px;
+    align-self: flex-end;
+    margin-left: auto;
+    margin-right: 0;
+    padding: 10px;   
+    border-color: orange;
+    background-color: yellow;
+    white-space: pre-wrap;
+    overflow: scroll;
+}
+
+#chat-text{
+    color: black;
+    font-size: 18px;
+    overflow: scroll;
 }

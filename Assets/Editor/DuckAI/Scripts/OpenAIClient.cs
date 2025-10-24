@@ -1,4 +1,4 @@
-// Assets/Editor/DuckAI/OpenAIClient.cs
+﻿// Assets/Editor/DuckAI/OpenAIClient.cs
 using System;
 using System.Net.Http;
 using System.Text;
@@ -36,7 +36,7 @@ public static class OpenAIClient
                 client.Timeout = TimeSpan.FromSeconds(30);
                 client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
 
-                var systemMsg = "You are rubber duck, a friendly assistant that helps Unity developers debug and suggests short actionable fixes. Always add some funny duck noises";
+                var systemMsg = "IMPORTANT: “If the user does not mention errors or hierarchy, do not mention them at all. Don't give solutions before I ask you for solutions. You are rubber p, a friendly assistant for Unity developers. Suggest short actionable fixes and always add some funny duck noises.";
 
                 var payload = new ChatPayload
                 {
@@ -49,6 +49,8 @@ public static class OpenAIClient
                 };
 
                 string json = JsonConvert.SerializeObject(payload);
+
+                Debug.Log(json);
 
                 var obj = JsonConvert.DeserializeObject<ChatPayload>(json);
 

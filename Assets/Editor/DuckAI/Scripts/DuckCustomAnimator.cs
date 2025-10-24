@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-public class DuckAnimations
+public class DuckCustomAnimator
 {
     private Dictionary<string, List<Texture2D>> animations = new();
     private string currentAnimation = null;
@@ -16,7 +16,7 @@ public class DuckAnimations
     private int playCount = 1;
     private int playCounter = 0;
 
-    public DuckAnimations(Dictionary<string, (string path, int frameCount)> animationDefs, float frameTime = 0.15f)
+    public DuckCustomAnimator(Dictionary<string, (string path, int frameCount)> animationDefs, float frameTime = 0.15f)
     {
         foreach (var kvp in animationDefs)
         {

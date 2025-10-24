@@ -1,18 +1,22 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static Codice.Client.Common.Servers.RecentlyUsedServers;
 public class DuckEditorWindow : EditorWindow
 {
-    [MenuItem("Window/RubberDuckHelper")]
-    public static void DisplayDuckWindow()
-    {
-        DuckEditorWindow window = GetWindow<DuckEditorWindow>();
-        window.Show();
-    }
+    [MenuItem("Window/RubberDuckHelper/Launch")]
+    public static void ShowWindow() => GetWindow<DuckEditorWindow>("Duck Helper");
 
-    [HideInInspector] public Image duckImage;
-    private DuckAnimations duckBehaviour;
+    [Header("Other viariables")]
+    private Image duckImage;
+    private DuckCustomAnimator duckBehaviour;
+    private TextField questionInput;
+    private string consoleErrors;
+    TextField boxField;
+    TextElement chatText;
 
     private void Awake()
     {
@@ -23,18 +27,54 @@ public class DuckEditorWindow : EditorWindow
         Texture2D iconTexture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/DuckAI/Textures/duck.png");
         if (iconTexture == null) return;
         else titleContent = new GUIContent("Duck Helper", iconTexture);
+
+        ConsoleLogHandler.GetRecentErrors();
+
     }
 
 
-    public void CreateGUI()
+    private void OnEnable()
+    {
+        EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+    }
+
+    private void OnDisable()
+    {
+        EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+        EditorApplication.update -= AnimateDuck;
+    }
+
+public void CreateGUI()
     {
         var root = rootVisualElement;
+        root.AddToClassList("duck-editor-root");
 
         var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/Editor/DuckAI/Scripts/DuckHelperStyleSheet.uss");
         if (styleSheet != null)
         {
             root.styleSheets.Add(styleSheet);
         }
+        boxField = new TextField("")
+        {
+            multiline = true,
+            value = ""
+        };
+        boxField.name = "box-field";
+        boxField.AddToClassList("box-field");
+       // root.Add(boxField);
+
+        Box box = new Box();
+        box.name = "box-field";
+        box.AddToClassList("box-field");
+        root.Add(box);
+
+        chatText = new TextElement
+        {
+            name = "chat-text",
+            text = "",
+        };
+        chatText.AddToClassList("chat-text");
+        box.Add(chatText);
 
         #region DUCK IMAGE ANIMATION
 
@@ -45,7 +85,7 @@ public class DuckEditorWindow : EditorWindow
             { "wave", ("Assets/Editor/Textures/duck_wave", 6) },
             { "talk", ("Assets/Editor/Textures/duck_talk", 5) }
         };
-        duckBehaviour = new DuckAnimations(DuckAnimations.GetAllAnimations());
+        duckBehaviour = new DuckCustomAnimator(DuckCustomAnimator.GetAllAnimations());
 
         duckImage = new Image
         {
@@ -60,8 +100,7 @@ public class DuckEditorWindow : EditorWindow
 
         Button animateButton = new Button(() =>
         {
-            duckBehaviour.SetAnimation("jump",2);
-            EditorApplication.update += AnimateDuck;
+            chatText.text = "";
         });
 
         animateButton.name = "animate-duck-button";
@@ -73,7 +112,7 @@ public class DuckEditorWindow : EditorWindow
 
         #region AI QUESTION INPUT AND BUTTON
 
-        TextField questionInput = new TextField("")
+       questionInput = new TextField("")
         {
             multiline = true,
             value = "Type your question here..."
@@ -82,36 +121,8 @@ public class DuckEditorWindow : EditorWindow
         questionInput.AddToClassList("question-input");
         root.Add(questionInput);
 
-        Button askButton = new Button(async () =>
-        {
-            duckBehaviour.SetAnimation("jump", 2);
-            EditorApplication.update += AnimateDuck;
-
-            string userPrompt = questionInput.value;
-            string apiKey = OpenAISettings.GetSavedKey();
-            string model = OpenAISettings.GetSavedModel();
-            //DebugColor.Log($"Using model: {model}", "red");
-            Debug.Log($"User prompt: {userPrompt}");
-            questionInput.value = "";
-
-            if (string.IsNullOrWhiteSpace(apiKey))
-            {
-                Debug.LogWarning("No OpenAI API key set. Please set your API key from Window > RubberDuckHelper > Set API Key.");
-                return;
-            }
-            try
-            {
-                string response = await OpenAIClient.SendChatAsync(apiKey, userPrompt, model);
-                var jObj = Unity.Plastic.Newtonsoft.Json.Linq.JObject.Parse(response);
-                string content = jObj["choices"]?[0]?["message"]?["content"]?.ToString();
-
-                DebugColor.Log( content, "Yellow");
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError("DuckAI error: " + ex.Message);
-            }
-        })
+        Button askButton = new Button(async () => await OnAskButtonPressedAsync())
+   
         {
             text = "Ask the Duck"
         };
@@ -131,14 +142,55 @@ public class DuckEditorWindow : EditorWindow
             EditorApplication.update -= AnimateDuck;
     }
 
-    private void OnDisable()
+    private void OnPlayModeStateChanged(PlayModeStateChange state)
     {
-        EditorApplication.update -= AnimateDuck;
+        if (state == PlayModeStateChange.EnteredEditMode)
+        {
+            // Play has just stopped — read console history and update UI
+            ConsoleLogHandler.RefreshFromConsoleHistory();
+            consoleErrors = ConsoleLogHandler.GetRecentErrors(10);
+            // If using UIElements, call:
+            Repaint(); // ensures EditorWindow repaints
+                       // If you use rootVisualElement labels, update their text here
+        }
     }
 
-    public void OnAskButtonPressed()
+    public async Task OnAskButtonPressedAsync()
     {
+        duckBehaviour.SetAnimation("jump", 2);
+        EditorApplication.update += AnimateDuck;
 
+        string hierarchy = HierarchyUtils.GetHierarchyString();
+       
+        string userPrompt = questionInput.value + "\n\nCurrent Unity hierarchy:\n" + hierarchy + "\n\nUnity errors:\n" + consoleErrors;
+
+
+        string apiKey = OpenAISettings.GetSavedKey();
+        string model = OpenAISettings.GetSavedModel();
+        //DebugColor.Log($"Using model: {model}", "red");
+        chatText.text += "\n\n You: " + questionInput.value;
+
+        Debug.Log($"User prompt: {userPrompt}");
+        questionInput.value = "";
+
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            Debug.LogWarning("No OpenAI API key set. Please set your API key from Window > RubberDuckHelper > Set API Key.");
+            return;
+        }
+        try
+        {
+            string response = await OpenAIClient.SendChatAsync(apiKey, userPrompt, model);
+            var jObj = Unity.Plastic.Newtonsoft.Json.Linq.JObject.Parse(response);
+            string content = jObj["choices"]?[0]?["message"]?["content"]?.ToString();
+            chatText.text = "\n\n Duck: " + content;
+            DebugColor.Log(content, "Yellow");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("DuckAI error: " + ex.Message);
+        }
+    
     }
 }
 
@@ -149,3 +201,4 @@ public class DuckEditorWindow : EditorWindow
 ///https://medium.com/@dilaura_exp/unity-editor-scripting-series-chapter-3-editor-window-e0d21ddc14dc (2)
 ///
 //https://docs.unity3d.com/6000.2/Documentation/Manual/UIE-ElementRef.html
+
