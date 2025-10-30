@@ -2,19 +2,24 @@ using UnityEngine;
 using UnityEditor;
 using UnityEngine.SceneManagement;
 using System.Text;
-
-public static class HierarchyUtils
+/// <summary>
+/// Generates a string representation of the hierarchy of all root GameObjects in the currently active scene.
+/// </summary>
+/// <remarks>This method retrieves all root GameObjects in the active scene and recursively traverses their child
+/// objects to construct a hierarchical string representation. Each level of the hierarchy is indented for
+/// clarity.</remarks>
+public static class HierarchyHandler
 {
     public static string GetHierarchyString()
     {
-        var sb = new StringBuilder();
+        var stringBuilder = new StringBuilder();
         var scene = SceneManager.GetActiveScene();
         var roots = scene.GetRootGameObjects();
         foreach (var root in roots)
         {
-            AppendGameObjectHierarchy(sb, root, 0);
+            AppendGameObjectHierarchy(stringBuilder, root, 0);
         }
-        return sb.ToString();
+        return stringBuilder.ToString();
     }
 
     private static void AppendGameObjectHierarchy(StringBuilder sb, GameObject go, int indent)

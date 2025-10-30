@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UIElements;
-using static Codice.Client.Common.Servers.RecentlyUsedServers;
+using Unity.EditorCoroutines.Editor;
+using System.IO;
 public class DuckEditorWindow : EditorWindow
 {
     [MenuItem("Window/RubberDuckHelper/Launch")]
@@ -160,13 +162,13 @@ public void CreateGUI()
         duckBehaviour.SetAnimation("jump", 2);
         EditorApplication.update += AnimateDuck;
 
-        string hierarchy = HierarchyUtils.GetHierarchyString();
+        string hierarchy = HierarchyHandler.GetHierarchyString();
        
         string userPrompt = questionInput.value + "\n\nCurrent Unity hierarchy:\n" + hierarchy + "\n\nUnity errors:\n" + consoleErrors;
 
 
-        string apiKey = OpenAISettings.GetSavedKey();
-        string model = OpenAISettings.GetSavedModel();
+        string apiKey = OpenAIConfiguration.GetSavedKey();
+        string model = OpenAIConfiguration.GetSavedModel();
         //DebugColor.Log($"Using model: {model}", "red");
         chatText.text += "\n\n You: " + questionInput.value;
 
@@ -185,6 +187,9 @@ public void CreateGUI()
             string content = jObj["choices"]?[0]?["message"]?["content"]?.ToString();
             chatText.text = "\n\n Duck: " + content;
             DebugColor.Log(content, "Yellow");
+
+            string audioPath = await OpenAIClient.RequestSpeechAsync(apiKey, content, "echo", "tts-1", "duck_speech.mp3");
+            DuckSpeechPlayer.PlayDuckAudio(audioPath);
         }
         catch (System.Exception ex)
         {
@@ -192,6 +197,7 @@ public void CreateGUI()
         }
     
     }
+
 }
 
 //references:

@@ -1,13 +1,15 @@
-// Assets/Editor/DuckAI/OpenAIKeyWindow.cs
-using System.Collections.Generic;
-using Unity.Multiplayer.Center.Common;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.UIElements;
+
+/// <summary>
+/// Represents a Unity Editor window for configuring OpenAI API settings, including the API key and model selection.
+/// </summary>
+/// <remarks>This window allows users to set and save their OpenAI API key and preferred model for use in the
+/// editor. The settings are stored using Unity's <see cref="EditorPrefs"/> and are specific to the Unity Editor
+/// environment.</remarks>
 
 #if UNITY_EDITOR
-public class OpenAISettings : EditorWindow
+public class OpenAIConfiguration : EditorWindow
 {
     const string KeyPref = "DuckAI_OpenAIKey";
     private string apiKey;
@@ -26,7 +28,7 @@ public class OpenAISettings : EditorWindow
     private int selectedModelIndex;
 
     [MenuItem("Window/RubberDuckHelper/Settings")]
-    public static void ShowWindow() => GetWindow<OpenAISettings>("Set OpenAI Key");
+    public static void ShowWindow() => GetWindow<OpenAIConfiguration>("Open AI Configurations");
 
     void OnEnable()
     {
