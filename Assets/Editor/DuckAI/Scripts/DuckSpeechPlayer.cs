@@ -12,38 +12,45 @@ using UnityEngine.Networking;
 /// cref="AudioSource"/>, and then cleaned up  after playback is complete. The audio file is deleted from the file
 /// system once playback finishes.</remarks>
 public static class DuckSpeechPlayer 
-{ 
-    public static void PlayDuckAudio(string filePath)
+{
+    public static bool canPlayAudio = true; // Flag to prevent overlapping audio playback
+
+
+    public static void PlayTTSAudio(string filePath)
     {
-        EditorCoroutineUtility.StartCoroutineOwnerless(PlayAudioCoroutine(filePath));
+        if (canPlayAudio) EditorCoroutineUtility.StartCoroutineOwnerless(PlayAudioCoroutine(filePath));
+        else return;
     }
 
-    private static IEnumerator  PlayAudioCoroutine(string filePath)
+    private static IEnumerator PlayAudioCoroutine(string filePath)
     {
-        using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip("file://" + filePath, AudioType.MPEG))
+        // Load the audio clip from the specified file path
+        using UnityWebRequest audioRequest = UnityWebRequestMultimedia.GetAudioClip("file://" + filePath, AudioType.MPEG); 
+        yield return audioRequest.SendWebRequest();
+        if (audioRequest.result == UnityWebRequest.Result.Success)
         {
-            yield return www.SendWebRequest();
-            if (www.result == UnityWebRequest.Result.Success)
+            // Get the audio clip from the download handler
+            AudioClip clip = DownloadHandlerAudioClip.GetContent(audioRequest);
+
+            // create a temporary GameObject with AudioSource component to play the audio
+            var duckAudioPlayer = new GameObject("DuckAudioPlayer");
+            var audioSource = duckAudioPlayer.AddComponent<AudioSource>();
+            audioSource.clip = clip;
+            //audioSource.pitch = 1.4f;
+            audioSource.Play();
+
+            while (audioSource.isPlaying) // Wait until playback is finished
             {
-                AudioClip clip = DownloadHandlerAudioClip.GetContent(www);
-                // Temporary GameObject setup to play audio
-                var duckAudioPlayer = new GameObject("DuckAudioPlayer"); 
-                var audioSource = duckAudioPlayer.AddComponent<AudioSource>();
-                audioSource.clip = clip;
-                audioSource.Play();
-
-                while (audioSource.isPlaying) // Wait until playback is finished
-                {
-                    yield return null;
-                }
-
-                DestroyAudio(duckAudioPlayer, filePath);
-
+                canPlayAudio = false;
+                yield return null;
             }
-            else
-            {
-                Debug.LogError("Failed to load audio: " + www.error);
-            }
+
+            DestroyAudio(duckAudioPlayer, filePath);
+
+        }
+        else
+        {
+            Debug.LogError("Failed to load audio: " + audioRequest.error);
         }
     }
 
@@ -54,6 +61,8 @@ public static class DuckSpeechPlayer
         else UnityEngine.Object.DestroyImmediate(audioSourceGameObject);
            
         File.Delete(filePath);
+
+        canPlayAudio = true;
 
         Debug.Log($"Finished playing duck audio and audio files are destroyed");
     }

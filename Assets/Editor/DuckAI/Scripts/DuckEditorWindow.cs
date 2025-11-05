@@ -7,6 +7,7 @@ using UnityEngine.Networking;
 using UnityEngine.UIElements;
 using Unity.EditorCoroutines.Editor;
 using System.IO;
+using UnityEngine.InputSystem;
 public class DuckEditorWindow : EditorWindow
 {
     [MenuItem("Window/RubberDuckHelper/Launch")]
@@ -68,17 +69,17 @@ public void CreateGUI()
         Box box = new Box();
         box.name = "box-field";
         box.AddToClassList("box-field");
-        root.Add(box);
+      //  root.Add(box);
 
-        chatText = new TextElement
-        {
-            name = "chat-text",
-            text = "",
-        };
-        chatText.AddToClassList("chat-text");
+       
         box.Add(chatText);
 
         #region DUCK IMAGE ANIMATION
+
+        var titleLabel = new Label("DuckGPT");
+        titleLabel.name = "title-label";
+        titleLabel.AddToClassList("title-label");
+        root.Add(titleLabel);
 
         // DUCK IMAGE
         var animDefs = new Dictionary<string, (string, int)>
@@ -107,14 +108,27 @@ public void CreateGUI()
 
         animateButton.name = "animate-duck-button";
         animateButton.AddToClassList("animate-duck-button");
-        root.Add(animateButton);
+      //  root.Add(animateButton);
 
 
         #endregion
 
         #region AI QUESTION INPUT AND BUTTON
 
-       questionInput = new TextField("")
+        var scrollView = new ScrollView();
+        scrollView.name = "chat-scroll-view";
+        scrollView.AddToClassList("chat-scroll-view");
+        root.Add(scrollView);
+
+        chatText = new TextElement
+        {
+            name = "chat-text",
+            text = "",
+        };
+        chatText.AddToClassList("chat-text");
+        scrollView.Add(chatText);
+
+        questionInput = new TextField("")
         {
             multiline = true,
             value = "Type your question here..."
@@ -131,6 +145,9 @@ public void CreateGUI()
         askButton.name = "ask-duck-button";
         askButton.AddToClassList("ask-duck-button");
         root.Add(askButton);
+
+
+     
         #endregion
     }
 
@@ -148,12 +165,11 @@ public void CreateGUI()
     {
         if (state == PlayModeStateChange.EnteredEditMode)
         {
-            // Play has just stopped — read console history and update UI
             ConsoleLogHandler.RefreshFromConsoleHistory();
             consoleErrors = ConsoleLogHandler.GetRecentErrors(10);
-            // If using UIElements, call:
-            Repaint(); // ensures EditorWindow repaints
-                       // If you use rootVisualElement labels, update their text here
+            
+            Repaint(); 
+                       
         }
     }
 
@@ -164,16 +180,17 @@ public void CreateGUI()
 
         string hierarchy = HierarchyHandler.GetHierarchyString();
        
-        string userPrompt = questionInput.value + "\n\nCurrent Unity hierarchy:\n" + hierarchy + "\n\nUnity errors:\n" + consoleErrors;
+      //  string userPrompt = questionInput.value + "\n\nCurrent Unity hierarchy:\n" + hierarchy + "\n\nUnity errors:\n" + consoleErrors;
 
+        string userPrompt = questionInput.value;
 
-        string apiKey = OpenAIConfiguration.GetSavedKey();
-        string model = OpenAIConfiguration.GetSavedModel();
+        string apiKey = ApiConfiguration.GetSavedKey();
+        string model = ApiConfiguration.GetSavedModel();
         //DebugColor.Log($"Using model: {model}", "red");
         chatText.text += "\n\n You: " + questionInput.value;
 
         Debug.Log($"User prompt: {userPrompt}");
-        questionInput.value = "";
+     //   questionInput.value = "";
 
         if (string.IsNullOrWhiteSpace(apiKey))
         {
@@ -182,14 +199,17 @@ public void CreateGUI()
         }
         try
         {
-            string response = await OpenAIClient.SendChatAsync(apiKey, userPrompt, model);
+            string response = await AIApiClient.SendChatAsync(userPrompt);
             var jObj = Unity.Plastic.Newtonsoft.Json.Linq.JObject.Parse(response);
             string content = jObj["choices"]?[0]?["message"]?["content"]?.ToString();
-            chatText.text = "\n\n Duck: " + content;
+            chatText.text = "\n\n You: " + questionInput.value + "\n\n Duck: " + content;
+            questionInput.value = "";
             DebugColor.Log(content, "Yellow");
 
-            string audioPath = await OpenAIClient.RequestSpeechAsync(apiKey, content, "echo", "tts-1", "duck_speech.mp3");
-            DuckSpeechPlayer.PlayDuckAudio(audioPath);
+            #region PLAY DUCK AUDIO RESPONSE
+            string audioPath = await AIApiClient.RequestSpeechAsync(content);
+            DuckSpeechPlayer.PlayTTSAudio(audioPath);
+            #endregion
         }
         catch (System.Exception ex)
         {

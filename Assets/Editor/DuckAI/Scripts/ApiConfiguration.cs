@@ -2,20 +2,20 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// Represents a Unity Editor window for configuring OpenAI API settings, including the API key and model selection.
+/// Configuration window for setting OpenAI and Eleven Labs API keys and selecting models in Unity Editor.
 /// </summary>
-/// <remarks>This window allows users to set and save their OpenAI API key and preferred model for use in the
-/// editor. The settings are stored using Unity's <see cref="EditorPrefs"/> and are specific to the Unity Editor
-/// environment.</remarks>
 
 #if UNITY_EDITOR
-public class OpenAIConfiguration : EditorWindow
+public class ApiConfiguration : EditorWindow
 {
     const string KeyPref = "DuckAI_OpenAIKey";
     private string apiKey;
 
     const string ModelPref = "DuckAI_OpenAIModels";
     private string model;
+
+    const string ElevenLabsKeyPref = "DuckAI_ElevenLabsKey";
+    private string elevenLabsApiKey;
 
     private static readonly string[] availableModels = new[]
     {
@@ -28,18 +28,19 @@ public class OpenAIConfiguration : EditorWindow
     private int selectedModelIndex;
 
     [MenuItem("Window/RubberDuckHelper/Settings")]
-    public static void ShowWindow() => GetWindow<OpenAIConfiguration>("Open AI Configurations");
+    public static void ShowWindow() => GetWindow<ApiConfiguration>("Open AI Configurations");
 
     void OnEnable()
     {
         apiKey = EditorPrefs.GetString(KeyPref, "");
         model = EditorPrefs.GetString(ModelPref, availableModels[0]);
+        elevenLabsApiKey = EditorPrefs.GetString(ElevenLabsKeyPref, "");
     }
 
     void OnGUI()
     {
         #region API KEY SETTER
-        GUILayout.Label("OpenAI API Key (Editor only)", EditorStyles.boldLabel);
+        GUILayout.Label("OpenAI API Key", EditorStyles.boldLabel);
         EditorGUILayout.HelpBox("Enter your API Key", MessageType.Info);
         apiKey = EditorGUILayout.TextField("API Key", apiKey);
 
@@ -68,7 +69,6 @@ public class OpenAIConfiguration : EditorWindow
         if (GUILayout.Button("Save Model"))
         {
             EditorPrefs.SetString(ModelPref, model);
-            //Debug.Log($"Saved model: {model}");
             Close();
         }
         if (GUILayout.Button("Clear Model"))
@@ -79,9 +79,30 @@ public class OpenAIConfiguration : EditorWindow
         }
         GUILayout.EndHorizontal();
         #endregion
+
+        #region ELEVEN LABS API KEY SETTER
+        GUILayout.Space(10);
+        GUILayout.Label("Eleven Labs API Key", EditorStyles.boldLabel);
+        EditorGUILayout.HelpBox("Enter your Eleven Labs API Key for text-to-speech functionality", MessageType.Info);
+        elevenLabsApiKey = EditorGUILayout.TextField("Eleven Labs API Key", elevenLabsApiKey);
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("Save Eleven Labs Key"))
+        {
+            EditorPrefs.SetString(ElevenLabsKeyPref, elevenLabsApiKey.Trim());
+            Close();
+        }
+        if (GUILayout.Button("Clear Eleven Labs Key"))
+        {
+            EditorPrefs.DeleteKey(ElevenLabsKeyPref);
+            elevenLabsApiKey = "";
+        }
+        GUILayout.EndHorizontal();
+        #endregion
     }
 
     public static string GetSavedKey() => EditorPrefs.GetString(KeyPref, "");
     public static string GetSavedModel() => EditorPrefs.GetString(ModelPref, availableModels[0]);
+
+    public static string GetSavedElevenLabsKey() => EditorPrefs.GetString(ElevenLabsKeyPref, "");
 }
 #endif

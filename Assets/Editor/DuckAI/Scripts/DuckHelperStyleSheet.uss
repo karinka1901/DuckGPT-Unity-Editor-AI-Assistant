@@ -54,3 +54,16 @@
     font-size: 18px;
     overflow: scroll;
 }
+
+.chat-scroll-view{
+    height: 50%;
+    background-color: grey;
+    
+}
+
+.title-label{
+    font-size: 52px;
+    font-weight: bold;
+    color: purple;
+    align-self: center;
+}
