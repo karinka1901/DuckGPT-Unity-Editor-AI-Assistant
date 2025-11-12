@@ -21,6 +21,8 @@ public static class AIApiClient
 
     public static string audioFileName = "speech.mp3";
 
+  //  private static string pineconeEndpoint = ""
+
     #region Chat with OpenAI
     /// Sends a chat prompt to OpenAI and returns the response as a string.
     public static async Task<string> SendChatAsync(string userPrompt) 
@@ -47,7 +49,7 @@ public static class AIApiClient
             model,
             messages = new[]
             {
-              new { role = "assistant", content = "You are a friendly rubber duck AI You respond conversationally and encourage the user to explain their thought process. Always add some duck noises" },
+              new { role = "assistant", content = "You are a friendly rubber duck AI You respond conversationally and encourage the user to explain their thought process. Always add some duck noises. Also try to give shorter answers. dont give solutions but give guidance" },
               new { role = "user", content = userPrompt }
             }
         };

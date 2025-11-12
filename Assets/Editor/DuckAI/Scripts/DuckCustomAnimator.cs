@@ -16,6 +16,17 @@ public class DuckCustomAnimator
     private int playCount = 1;
     private int playCounter = 0;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DuckCustomAnimator"/> class with the specified animation
+    /// definitions and frame time.
+    /// </summary>
+    /// <remarks>This constructor loads the animation frames from the specified paths and initializes the
+    /// animator with the first animation in the dictionary, if any animations are provided. If no animations are
+    /// defined, the animator will remain uninitialized.</remarks>
+    /// <param name="animationDefs">A dictionary where each key represents the name of an animation, and the value is a tuple containing the path to
+    /// the animation frames and the total number of frames in the animation. The path should point to a directory
+    /// containing the animation frames as PNG files.</param>
+    /// <param name="frameTime">The duration, in seconds, that each frame of the animation is displayed. The default value is 0.15 seconds.</param>
     public DuckCustomAnimator(Dictionary<string, (string path, int frameCount)> animationDefs, float frameTime = 0.15f)
     {
         foreach (var kvp in animationDefs)
@@ -96,7 +107,9 @@ public class DuckCustomAnimator
         return new Dictionary<string, (string, int)>
         {
             { "jump", ("Assets/Editor/DuckAI/Animations/duck_jump", 4) },
-  
+            { "talk", ("Assets/Editor/DuckAI/Animations/duck_talk", 4) },
+
+
         };
     }
 }

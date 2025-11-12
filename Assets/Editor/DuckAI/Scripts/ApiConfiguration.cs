@@ -17,6 +17,9 @@ public class ApiConfiguration : EditorWindow
     const string ElevenLabsKeyPref = "DuckAI_ElevenLabsKey";
     private string elevenLabsApiKey;
 
+    const string PineconeKeyPref = "DuckAI_PineconeKey";
+    private string pineconeApiKey;
+
     private static readonly string[] availableModels = new[]
     {
         "gpt-4.1-mini",
@@ -41,7 +44,6 @@ public class ApiConfiguration : EditorWindow
     {
         #region API KEY SETTER
         GUILayout.Label("OpenAI API Key", EditorStyles.boldLabel);
-        EditorGUILayout.HelpBox("Enter your API Key", MessageType.Info);
         apiKey = EditorGUILayout.TextField("API Key", apiKey);
 
         GUILayout.BeginHorizontal();
@@ -83,7 +85,6 @@ public class ApiConfiguration : EditorWindow
         #region ELEVEN LABS API KEY SETTER
         GUILayout.Space(10);
         GUILayout.Label("Eleven Labs API Key", EditorStyles.boldLabel);
-        EditorGUILayout.HelpBox("Enter your Eleven Labs API Key for text-to-speech functionality", MessageType.Info);
         elevenLabsApiKey = EditorGUILayout.TextField("Eleven Labs API Key", elevenLabsApiKey);
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("Save Eleven Labs Key"))
@@ -98,11 +99,30 @@ public class ApiConfiguration : EditorWindow
         }
         GUILayout.EndHorizontal();
         #endregion
+
+        #region PINECONE API
+        GUILayout.Space(10);
+        GUILayout.Label("Pinecone API Key", EditorStyles.boldLabel);
+        pineconeApiKey = EditorGUILayout.TextField("Pinecone API Key", pineconeApiKey);
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("Save Pinecone Key"))
+        {
+            EditorPrefs.SetString(PineconeKeyPref, pineconeApiKey.Trim());
+            Close();
+        }
+        if (GUILayout.Button("Clear Pinecone Key"))
+        {
+            EditorPrefs.DeleteKey(PineconeKeyPref);
+            pineconeApiKey = "";
+        }
+        GUILayout.EndHorizontal();
+        #endregion
+
     }
 
     public static string GetSavedKey() => EditorPrefs.GetString(KeyPref, "");
     public static string GetSavedModel() => EditorPrefs.GetString(ModelPref, availableModels[0]);
-
     public static string GetSavedElevenLabsKey() => EditorPrefs.GetString(ElevenLabsKeyPref, "");
+    public static string GetSavedPineconeKey() => EditorPrefs.GetString(PineconeKeyPref, "");
 }
 #endif

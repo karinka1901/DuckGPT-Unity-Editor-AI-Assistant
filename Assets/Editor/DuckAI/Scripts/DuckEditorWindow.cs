@@ -1,13 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Networking;
 using UnityEngine.UIElements;
-using Unity.EditorCoroutines.Editor;
-using System.IO;
-using UnityEngine.InputSystem;
+
 public class DuckEditorWindow : EditorWindow
 {
     [MenuItem("Window/RubberDuckHelper/Launch")]
@@ -15,11 +11,23 @@ public class DuckEditorWindow : EditorWindow
 
     [Header("Other viariables")]
     private Image duckImage;
-    private DuckCustomAnimator duckBehaviour;
+    private DuckCustomAnimator duckAnimator;
     private TextField questionInput;
-    private string consoleErrors;
+    
     TextField boxField;
     TextElement chatText;
+
+    #region Console Log Variables
+    private bool consoleLogSelected = false;
+    public Button consoleLogButton;
+    private string consoleErrors = "";
+    #endregion
+
+    #region Hierarchy Variables
+    private bool hierarchySelected = false;
+    public Button hierarchyButton;
+    private string hierarchy = "";
+    #endregion
 
     private void Awake()
     {
@@ -88,11 +96,11 @@ public void CreateGUI()
             { "wave", ("Assets/Editor/Textures/duck_wave", 6) },
             { "talk", ("Assets/Editor/Textures/duck_talk", 5) }
         };
-        duckBehaviour = new DuckCustomAnimator(DuckCustomAnimator.GetAllAnimations());
+        duckAnimator = new DuckCustomAnimator(DuckCustomAnimator.GetAllAnimations());
 
         duckImage = new Image
         {
-            image = duckBehaviour.GetCurrentFrame(),
+            image = duckAnimator.GetCurrentFrame(),
             scaleMode = ScaleMode.ScaleToFit
         };
         duckImage.name = "duck-image";
@@ -115,6 +123,39 @@ public void CreateGUI()
 
         #region AI QUESTION INPUT AND BUTTON
 
+       consoleLogButton = new Button(() =>
+        {
+            IncludeConsoleLog();
+        })
+        {
+            text = "Console Log"
+        };
+        consoleLogButton.name = "console-log-button";
+        consoleLogButton.AddToClassList("console-log-button");
+        root.Add(consoleLogButton);
+
+        hierarchyButton = new Button(() =>
+        {
+           IncludeHierachy();
+        })
+        {
+            text = "Hierarchy"
+        };
+        hierarchyButton.name = "hierarchy-button";
+        hierarchyButton.AddToClassList("hierarchy-button");
+        root.Add(hierarchyButton);
+
+        Button scriptsButton = new Button(() =>
+        {
+           
+        })
+        {
+            text = "Scripts"
+        };
+        scriptsButton.name = "scripts-button";
+        scriptsButton.AddToClassList("scripts-button");
+        root.Add(scriptsButton);
+
         var scrollView = new ScrollView();
         scrollView.name = "chat-scroll-view";
         scrollView.AddToClassList("chat-scroll-view");
@@ -131,7 +172,7 @@ public void CreateGUI()
         questionInput = new TextField("")
         {
             multiline = true,
-            value = "Type your question here..."
+            value = "Quack..."
         };
         questionInput.name = "question-input";
         questionInput.AddToClassList("question-input");
@@ -153,8 +194,8 @@ public void CreateGUI()
 
     private void AnimateDuck()
     {
-        if (duckBehaviour == null || duckImage == null) return;
-        bool done = duckBehaviour.Animate(out var frame);
+        if (duckAnimator == null || duckImage == null) return;
+        bool done = duckAnimator.Animate(out var frame);
         duckImage.image = frame;
 
         if (done)
@@ -173,16 +214,57 @@ public void CreateGUI()
         }
     }
 
+    private void IncludeHierachy()
+    {
+        if (!hierarchySelected)
+        {
+            hierarchySelected = true;
+            hierarchyButton.style.backgroundColor = Color.green;
+
+         //   hierarchy ="\nCurrent hierarchy:\n" + HierarchyHandler.GetHierarchyString();
+        }
+        else
+        {
+            hierarchySelected = false;
+            hierarchyButton.style.backgroundColor = Color.grey;
+
+            hierarchy = "";
+        }
+    }
+
+    private void IncludeConsoleLog()
+    {
+        if (!consoleLogSelected)
+        {
+            consoleLogSelected = true;
+            consoleLogButton.style.backgroundColor = Color.green;
+
+          //  consoleErrors = "\nUnity Errors:\n" + ConsoleLogHandler.GetRecentErrors(10);
+        }
+        else
+        {
+            consoleLogSelected = false;
+            consoleLogButton.style.backgroundColor = Color.grey;
+
+            consoleErrors = "";
+        }
+    }
+
+
     public async Task OnAskButtonPressedAsync()
     {
-        duckBehaviour.SetAnimation("jump", 2);
+        duckAnimator.SetAnimation("talk", 8);
         EditorApplication.update += AnimateDuck;
 
-        string hierarchy = HierarchyHandler.GetHierarchyString();
-       
-      //  string userPrompt = questionInput.value + "\n\nCurrent Unity hierarchy:\n" + hierarchy + "\n\nUnity errors:\n" + consoleErrors;
+        hierarchy = hierarchySelected ? "\nCurrent hierarchy:\n" + HierarchyHandler.GetHierarchyString() : "";
+        consoleErrors = consoleLogSelected ? "\nUnity Errors:\n" + ConsoleLogHandler.GetRecentErrors(2) : "";
 
-        string userPrompt = questionInput.value;
+        string componentsContext = ConsoleLogHandler.TryBuildComponentsContextFromErrors(consoleErrors);
+
+        string mentionedGOComponents = HierarchyHandler.LookForComponentsInPrompt(questionInput.value);
+
+        string userPrompt = "Answer primarely this: " + questionInput.value + "\nUse this as helpers: " + consoleErrors + hierarchy + componentsContext + mentionedGOComponents ;
+        
 
         string apiKey = ApiConfiguration.GetSavedKey();
         string model = ApiConfiguration.GetSavedModel();
@@ -206,10 +288,10 @@ public void CreateGUI()
             questionInput.value = "";
             DebugColor.Log(content, "Yellow");
 
-            #region PLAY DUCK AUDIO RESPONSE
-            string audioPath = await AIApiClient.RequestSpeechAsync(content);
-            DuckSpeechPlayer.PlayTTSAudio(audioPath);
-            #endregion
+          //  #region PLAY DUCK AUDIO RESPONSE
+          //  string audioPath = await AIApiClient.RequestSpeechAsync(content);
+          //  DuckSpeechPlayer.PlayTTSAudio(audioPath);
+           // #endregion
         }
         catch (System.Exception ex)
         {
@@ -217,6 +299,8 @@ public void CreateGUI()
         }
     
     }
+
+   
 
 }
 
@@ -227,4 +311,6 @@ public void CreateGUI()
 ///https://medium.com/@dilaura_exp/unity-editor-scripting-series-chapter-3-editor-window-e0d21ddc14dc (2)
 ///
 //https://docs.unity3d.com/6000.2/Documentation/Manual/UIE-ElementRef.html
+
+//[4] https://www.geeksforgeeks.org/c-sharp/what-is-regular-expression-in-c-sharp/
 
