@@ -141,7 +141,7 @@ public static class HierarchyHandler
         if (string.IsNullOrEmpty(prompt)) return "";
         else
         {
-            Match match = Regex.Match(prompt, "[\"']([^\"']+)[\"']"); // Extract text within quotes
+            Match match = Regex.Match(prompt, "[\"]([^\"]+)[\"]"); // Extract text within quotes
             if (!match.Success)
             {
                 return "";

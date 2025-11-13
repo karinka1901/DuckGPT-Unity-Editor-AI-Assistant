@@ -258,11 +258,10 @@ public void CreateGUI()
         hierarchy = hierarchySelected ? "\nCurrent hierarchy:\n" + HierarchyHandler.GetHierarchyString() : "";
         consoleErrors = consoleLogSelected ? "\nUnity Errors:\n" + ConsoleLogHandler.GetRecentErrors() : "";
 
-      //  string componentsContext = ConsoleLogHandler.TryBuildComponentsContextFromErrors(consoleErrors);
+   
 
-        string mentionedGOComponents = HierarchyHandler.LookForComponentsInPrompt(questionInput.value);
-
-        string userPrompt = "Answer primarely this: " + questionInput.value + "\nUse this as helpers: " + consoleErrors + hierarchy  + mentionedGOComponents ;
+        string mentionedGOComponents = HierarchyHandler.LookForComponentsInPrompt(questionInput.value + consoleErrors);
+        string userPrompt = questionInput.value + "\n " + consoleErrors + hierarchy  + mentionedGOComponents ;
         
 
         string apiKey = ApiConfiguration.GetSavedKey();
@@ -313,3 +312,12 @@ public void CreateGUI()
 
 //[4] https://www.geeksforgeeks.org/c-sharp/what-is-regular-expression-in-c-sharp/
 
+//https://www.foundations.unity.com/components
+
+
+
+// TO DO:
+// - create error buttons when erros are present 
+// - clicking error button adds error context to prompt
+
+//add memory to the chat
