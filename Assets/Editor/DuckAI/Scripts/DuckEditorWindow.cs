@@ -43,7 +43,6 @@ public class DuckEditorWindow : EditorWindow
 
     }
 
-
     private void OnEnable()
     {
         EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
@@ -239,7 +238,7 @@ public void CreateGUI()
             consoleLogSelected = true;
             consoleLogButton.style.backgroundColor = Color.green;
 
-          //  consoleErrors = "\nUnity Errors:\n" + ConsoleLogHandler.GetRecentErrors(10);
+            //  consoleErrors = "\nUnity Errors:\n" + ConsoleLogHandler.GetRecentErrors(10);
         }
         else
         {
@@ -257,13 +256,13 @@ public void CreateGUI()
         EditorApplication.update += AnimateDuck;
 
         hierarchy = hierarchySelected ? "\nCurrent hierarchy:\n" + HierarchyHandler.GetHierarchyString() : "";
-        consoleErrors = consoleLogSelected ? "\nUnity Errors:\n" + ConsoleLogHandler.GetRecentErrors(2) : "";
+        consoleErrors = consoleLogSelected ? "\nUnity Errors:\n" + ConsoleLogHandler.GetRecentErrors() : "";
 
-        string componentsContext = ConsoleLogHandler.TryBuildComponentsContextFromErrors(consoleErrors);
+      //  string componentsContext = ConsoleLogHandler.TryBuildComponentsContextFromErrors(consoleErrors);
 
         string mentionedGOComponents = HierarchyHandler.LookForComponentsInPrompt(questionInput.value);
 
-        string userPrompt = "Answer primarely this: " + questionInput.value + "\nUse this as helpers: " + consoleErrors + hierarchy + componentsContext + mentionedGOComponents ;
+        string userPrompt = "Answer primarely this: " + questionInput.value + "\nUse this as helpers: " + consoleErrors + hierarchy  + mentionedGOComponents ;
         
 
         string apiKey = ApiConfiguration.GetSavedKey();

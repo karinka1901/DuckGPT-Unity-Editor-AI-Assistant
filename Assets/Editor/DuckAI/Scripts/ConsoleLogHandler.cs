@@ -4,118 +4,114 @@ using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 
+/// <summary>
+/// Static class that captures and stores recent error logs from Unity's Console for AI debugging assistance.
+/// Uses real-time event subscription and reflection-based access to Unity's internal LogEntry structure.
+/// Internal UnityEditor.dll structure was reverse-engineered using ILSpy to access LogEntries and LogEntry classes.
+/// Provides thread-safe deduplication and maintains a rolling buffer of the 20 most recent errors.
+/// </summary>
+/// 
 [InitializeOnLoad]
-public static class ConsoleLogHandler 
+public static class ConsoleLogHandler
 {
     private static readonly List<string> errorLogs = new List<string>();
-    private static readonly object _lock = new();
+    private static readonly HashSet<string> processedErrors = new HashSet<string>(); 
+    private static readonly object _lockObj = new();
 
     static ConsoleLogHandler()
     {
-        // Subscribe to ONE log event to avoid duplicates.
         Application.logMessageReceived += HandleLog;
-
-        // subscribe to playmode changes so we can capture history after play stops
         EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
     }
 
-    private static void OnPlayModeStateChanged(PlayModeStateChange state)
+    private static void OnPlayModeStateChanged(PlayModeStateChange state) // Clears errors on play mode change and refreshes from history on edit mode
     {
         if (state == PlayModeStateChange.EnteredEditMode)
         {
             RefreshFromConsoleHistory();
         }
+        else if (state == PlayModeStateChange.EnteredPlayMode)
+        {
+            lock (_lockObj)
+            {
+                processedErrors.Clear();
+            }
+        }
     }
 
-    public static void RefreshFromConsoleHistory()
+    public static void RefreshFromConsoleHistory() // Reads the Unity Console log history via reflection and processes error entries
     {
         var logEntries = System.Type.GetType("UnityEditor.LogEntries, UnityEditor.dll");
-        if (logEntries == null) { Debug.LogError("Could not find UnityEditor.LogEntries type."); return; }
 
         var getCountMethod = logEntries.GetMethod("GetCount", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
         var getEntryMethod = logEntries.GetMethod("GetEntryInternal", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
-        if (getCountMethod == null || getEntryMethod == null) { Debug.LogError("Could not find LogEntries methods."); return; }
 
         var logEntryType = System.Type.GetType("UnityEditor.LogEntry, UnityEditor.dll");
-        if (logEntryType == null) { Debug.LogError("Could not find UnityEditor.LogEntry type."); return; }
-
         var logEntryInstance = System.Activator.CreateInstance(logEntryType);
-        if (logEntryInstance == null) { Debug.LogError("Could not create LogEntry instance."); return; }
 
-        var conditionField = logEntryType.GetField("condition");
-        var stackTraceField = logEntryType.GetField("stackTrace");
-        var typeField = logEntryType.GetField("mode");
-        if (conditionField == null || stackTraceField == null || typeField == null) return;
+        // LogEntry structure from UnityEditor.dll
+        var messageField = logEntryType.GetField("message"); //log message
+        var fileField = logEntryType.GetField("file"); //file path
+        var lineField = logEntryType.GetField("line"); //line number
+        var columnField = logEntryType.GetField("column"); //column number
+        var modeField = logEntryType.GetField("mode");  //log type 
+        var instanceIDField = logEntryType.GetField("instanceID"); //unity object ID
 
         int count = (int)getCountMethod.Invoke(null, null);
-
-        // Rebuild from history to avoid duplicates
-        var newErrors = new List<string>(capacity: Mathf.Min(count, 200));
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < count; i++) //iterate through all log entries and extract errors
         {
             getEntryMethod.Invoke(null, new object[] { i, logEntryInstance });
-            string condition = (string)conditionField.GetValue(logEntryInstance);
-            string stackTrace = (string)stackTraceField.GetValue(logEntryInstance);
-            int mode = (int)typeField.GetValue(logEntryInstance);
 
-            // Try to interpret mode as LogType; only keep Error/Exception
-            var type = (LogType)mode;
-            if (type == LogType.Error || type == LogType.Exception)
+            string message = (string)messageField.GetValue(logEntryInstance) ?? "";
+            string file = (string)fileField.GetValue(logEntryInstance) ?? "";
+            int line = (int)lineField.GetValue(logEntryInstance);
+            int column = (int)columnField.GetValue(logEntryInstance);
+            int mode = (int)modeField.GetValue(logEntryInstance);
+            //   int instanceID = (int)instanceIDField.GetValue(logEntryInstance); //ill use it latwer if needed
+            LogType logType = (LogType)mode;
+
+            // stack trace from file and line info
+            string stackTrace = "";
+            if (!string.IsNullOrEmpty(file) && line > 0)
             {
-                string entry = $"{condition}\n{stackTrace}";
-                if (newErrors.Count == 0 || newErrors[newErrors.Count - 1] != entry)
-                    newErrors.Add(entry);
+                if (column != 0)
+                    stackTrace = $"(at {file}:{line},{column})";
+                else
+                    stackTrace = $"(at {file}:{line})";
             }
-        }
-
-        lock (_lock)
-        {
-            errorLogs.Clear();
-            // Keep only the last 20
-            int start = Mathf.Max(0, newErrors.Count - 20);
-            for (int i = start; i < newErrors.Count; i++)
-                errorLogs.Add(newErrors[i]);
+            HandleLog(message, stackTrace, logType);
         }
     }
 
     private static void HandleLog(string logString, string stackTrace, LogType type)
     {
-        if (type != LogType.Error && type != LogType.Exception) return;
-
-        string entry = $"{logString}\n{stackTrace}";
-        lock (_lock)
+        if (type == LogType.Error || type == LogType.Exception)
         {
-            // Deduplicate consecutive duplicates (e.g., when multiple events fire)
-            if (errorLogs.Count > 0 && errorLogs[errorLogs.Count - 1] == entry)
-                return;
+            string error = $"{logString}\n{stackTrace}";
+            string errorKey = $"{logString}|{stackTrace}|{type}"; // Unique key for the error to avoid duplicates
 
-            errorLogs.Add(entry);
-            if (errorLogs.Count > 20)
-                errorLogs.RemoveAt(0);
+            if (processedErrors.Add(errorKey))
+            {
+                errorLogs.Add(error);
+                if (errorLogs.Count > 20)
+                {
+                    errorLogs.RemoveAt(0);
+                }
+            }
+
         }
     }
 
     public static string GetRecentErrors(int maxCount = 5)
     {
-        lock (_lock)
-        {
-            if (errorLogs.Count == 0) return "No recent errors.";
-
-            var result = new List<string>(maxCount);
-            var seen = new HashSet<string>();
-            for (int i = errorLogs.Count - 1; i >= 0 && result.Count < maxCount; i--)
-            {
-                var e = errorLogs[i];
-                if (seen.Add(e))
-                    result.Add(e);
-            }
-            result.Reverse();
-            return string.Join("\n---\n", result);
-        }
+        int count = Mathf.Min(maxCount, errorLogs.Count);
+        if (count == 0) return "No recent errors.";
+        return string.Join("\n---\n", errorLogs.GetRange(errorLogs.Count - count, count));
     }
 
 
 
+    #region NOT USED CURRENTLY
     public static string TryBuildComponentsContextFromErrors(string errors) // Extracts GameObject components info if a MissingComponentException is found [4]
     {
         if (string.IsNullOrEmpty(errors)) return "";
@@ -195,8 +191,10 @@ public static class ConsoleLogHandler
 
         return null;
     }
+
+    #endregion
 }
 
-//https://github.com/Unity-Technologies/UnityCsReference/blob/master/Editor/Mono/ConsoleWindow.cs
+
 
 //https://gist.github.com/Hertzole/d28243075a1074ce7b2ff713fcfe8573
