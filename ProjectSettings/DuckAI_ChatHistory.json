@@ -1,0 +1,476 @@
+[
+  {
+    "role": "user",
+    "content": "can you see my scene",
+    "timestamp": 1763233297930,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! From what I see, your scene has quite a few active objects: Main Camera is active and enabled, your duck object is active with its components enabled, Cube, Sphere, and others are active too. Some are inactive, like Directional Light and Global Volume. So yes, I can see your scene structure and active elements. What makes you wonder if you can see your scene? Any specific issue? Quack!",
+    "timestamp": 1763233299614,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "can you list my scene obects",
+    "timestamp": 1763233314145,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! I didn't get the helpers you mentioned—could you share those? Meanwhile, if you want, just tell me the objects you see or the list you have, and I can help you sort or analyze them. Quack quack!",
+    "timestamp": 1763233315203,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "whats with the errors",
+    "timestamp": 1763234731321,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "whats with the errors",
+    "timestamp": 1763234773237,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "can you see my scene",
+    "timestamp": 1763236199932,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! Yes, I can see your scene! You’ve got objects like Main Camera, a disabled Directional Light, a duck with several components, Cube, Sphere, and more. Some objects are active, some inactive. Maybe the errors come from the disabled objects or missing references? What errors are you getting exactly? Quack quack!",
+    "timestamp": 1763236201188,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "what should i do if i want to set up a 2d platformer",
+    "timestamp": 1763236244933,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! To set up a 2D platformer using your scene, here’s a quick dabble to get you started:\n\n1. **Use 2D components:** Make sure your player (duck) uses Rigidbody2D and Collider2D (looks like you have that with Rigidbody2D on duck). Great!  \n2. **Set up the camera:** Use an orthographic camera for 2D (your Main Camera seems fine, just set Projection to Orthographic).  \n3. **Add platform colliders:** Your Cube has a BoxCollider but probably 3D; swap that with BoxCollider2D for 2D physics. Same for any other ground objects.  \n4. **Gravity & movement:** Set gravity in Physics2D settings; apply forces or velocity changes to your duck’s Rigidbody2D for movement/jumping.  \n5. **Disable 3D objects:** Sphere and h use Rigidbody & SphereCollider (3D). For a pure 2D platformer, consider disabling or replacing them with 2D equivalents.  \n6. **Event System:** You have this active, ready for UI input. Perfect to add buttons or controls if needed.  \n\nDoes all that fit your current goals? What movement or mechanic ideas do you have? Quack!",
+    "timestamp": 1763236249077,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "can you help me",
+    "timestamp": 1763236912401,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! Yes, I can help! Your error, \"UnassignedReferenceException,\" means testObject isn’t set in the Inspector, so in Update() when you do testObject.transform, it crashes.\n\nLooking at your script: \n- In Start(), you try `testObject = GetComponentInChildren<GameObject>();` but that’s invalid because GetComponentInChildren expects a Component type, and GameObject isn’t a Component type. That leaves testObject null.\n\nTry this instead:\n- Remove that line or replace it with something like:  \n`testObject = transform.Find(\"testObject\")?.gameObject;`  \nif \"testObject\" is the child’s name, or assign testObject manually in the Inspector!\n\nAlso:\n- Your Rigidbody is 3D, but from scene you have Rigidbody2D on duck — maybe mismatch there?\n\nCan you check if you're assigning testObject in the Inspector? If not, either assign it manually or find it properly in code.\n\nQuack quack! Does that help clarify?",
+    "timestamp": 1763236915692,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "so what should i do",
+    "timestamp": 1763236996407,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! So, what should you do? Here’s a quick peck-list:\n\n1. Assign **testObject** in the Inspector manually (drag and drop the GameObject you want).  \n2. Or find it correctly in code, e.g.,  \n   `testObject = transform.Find(\"ChildName\")?.gameObject;`  \n3. Don’t use `GetComponentInChildren<GameObject>()` — GameObject isn’t a Component!  \n4. Make sure your Rigidbody and Collider types match your 2D or 3D setup.\n\nTry this first and see if the error goes away! Quack quack! What’s next on your mind?",
+    "timestamp": 1763236998737,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "can you give me a summary of this project",
+    "timestamp": 1763237796674,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! Here’s a quick summary of your project \"Thesis-RubberDuckAI\":\n\n- It’s a pretty big project with **6096 scripts** and **4 scenes**.\n- There are **30 prefabs**, lots of assets like **1046 textures** and **110 shaders**, but no audio clips.\n- Scripts include a huge chunk of **Editor scripts (3123)**, many **Static Utility classes (262)**, plus hundreds of MonoBehaviour scripts (**180**) and others.\n- Main focus seems on AI and editor tooling — classes like **AIApiClient**, **ChatMemory**, **DuckSpeechPlayer**, and editor extensions like **DuckEditorWindow**.\n- The current scene (\"SampleScene\") is simple, with 11 GameObjects and common components like Camera, Light, and EventSystem.\n- Many scripts have dependencies on system libraries and Unity editor or UI libraries, hinting at complex functionality and integrations.\n\nLooks like a large AI-assisted project with editor tooling and possibly some runtime interaction with a “duck” character!\n\nQuack! Does that help you get an overall picture?",
+    "timestamp": 1763237801660,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "what 6096 scripts? i only have like 15 mqx",
+    "timestamp": 1763237857812,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! About that \"6096 scripts\" number — it includes everything in your project: not just your own 15 scripts, but also tons of editor scripts, utility classes, interfaces, enums, structs, tests, and maybe auto-generated or package scripts. For example, there are **3123 editor scripts** and **262 static utility classes**, plus many others contributing to that huge total.\n\nSo your core gameplay or custom code might be just 15 scripts, but the rest come from packages, testing code, editor extensions, and framework stuff. It’s normal for big projects or ones using external packages!\n\nDoes that clear it up? Quack quack!",
+    "timestamp": 1763237860551,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "so now if i want to animate the duck in the scene what should i do",
+    "timestamp": 1763237993402,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! To animate your duck in the scene, here’s what I’d suggest based on your project info:\n\n1. **Check existing animations:** You have 2 animations already in assets, so start by seeing if those are for the duck or can be adapted.\n\n2. **Animator component:** Add an Animator component to your duck GameObject if it doesn’t have one. This manages animation playback.\n\n3. **Animation Controller:** You probably have or need an Animator Controller asset to organize and control your duck's animations (idle, walk, jump, etc.). Create or use an existing one.\n\n4. **Use DuckCustomAnimator:** Because your editor scripts include a `DuckCustomAnimator`, it might have special animation handling tailored for this project. Investigate or use this script to set up duck animation flows.\n\n5. **Assign animations and set transitions:** Put animation clips into the Animator Controller and set parameters/transitions to switch animations based on game logic (e.g., moving vs idle).\n\n6. **Control animations via scripts:** Use scripts (maybe your MonoBehaviours or DuckSpeechPlayer) to trigger animation parameter changes during gameplay.\n\nTry checking the duck prefab or GameObject for Animator and `DuckCustomAnimator` components as a start. Quack quack! What animation do you want your duck to do first?",
+    "timestamp": 1763237997902,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "can yuo sum up my project",
+    "timestamp": 1763238249118,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! Here’s a quick summary of your project \"Thesis-RubberDuckAI\":\n\n- You have **4 custom scripts total**, but only **1 script ('test') is active in the current scene**.\n- Your current scene (\"SampleScene\") has **11 GameObjects** and uses common components like Transform, Camera, Light, MeshRenderer.\n- You have **30 prefabs**, 1046 textures, 2 animations, but no audio clips.\n- The 3 other scripts are editor tools not active in the scene.\n- Your main gameplay script \"test\" is attached to the duck GameObject.\n- Your scripts depend mainly on UnityEngine and Rigidbody components for physics.\n\nOverall, it’s a small, focused project with minimal active gameplay scripting in the scene, supplemented by editor extensions and a decent asset collection.\n\nQuack! Does that capture your project well?",
+    "timestamp": 1763238252166,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "give me  arecap of this project",
+    "timestamp": 1763239104677,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! Here’s a quick recap of your project \"Thesis-RubberDuckAI\":\n\n- You have **4 custom scripts**, but only **1 script (\"test\") is active in your current scene (\"SampleScene\")**.\n- The scene has **11 GameObjects** with common components like Transforms, MeshRenderers, Camera, and Light.\n- Your duck GameObject uses the \"test\" script, which depends on UnityEngine and Rigidbody.\n- There are **30 prefabs**, **1046 textures**, **2 animations**, no audio clips, plus various materials and shaders.\n- Three editor scripts exist but are not active in the scene, used for utilities like folder customization and color picking.\n- Overall, it’s a focused project with minimal gameplay scripting active in the scene and a good number of assets ready for use.\n\nQuack quack! Does this summary help you get a clear overview?",
+    "timestamp": 1763239107151,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "so did you read my script",
+    "timestamp": 1763239189552,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! Yes, I did read your script “test” — it’s the only custom MonoBehaviour active in your current scene, attached to the duck GameObject.  \nIt depends on UnityEngine and Rigidbody, so it's set up to interact with Unity’s physics and game objects.  \nThe rest of your scripts are editor tools, not active in gameplay.  \n\nSo, your gameplay logic for the duck is primarily in this “test” script within the scene. Quack quack! What part of the “test” script do you want to dive into?",
+    "timestamp": 1763239191350,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "so why am i getting an error",
+    "timestamp": 1763239213430,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! The error happens because `testObject` is **null** in `Update()` when you try to do `testObject.transform.Rotate(...)`. Your code tries to assign it in `Start()` with:\n\n```csharp\ntestObject = GetComponentInChildren<GameObject>();\n```\n\nBut **`GetComponentInChildren<GameObject>()` is invalid**—GameObject is not a Component type, so this returns null.\n\nThat means `testObject` stays unassigned, causing the error when you use it.\n\nTo fix it, you should:\n\n- Assign `testObject` manually in the Inspector by dragging a GameObject to that field.  \n- Or, assign it in code correctly, for example:\n\n```csharp\ntestObject = transform.GetChild(0).gameObject;  // if your intended object is the first child\n```\nor\n\n```csharp\ntestObject = GameObject.Find(\"NameOfYourChildObject\");\n```\n\nQuack! Does that make sense? Can you try assigning `testObject` properly now?",
+    "timestamp": 1763239217704,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "can you explain like im five",
+    "timestamp": 1763239288118,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! Okay, imagine you have a toy duck and you want to spin one of its parts. Your script says, “Hey, spin this part!” but actually, it never got told which part to spin—it's like pointing at nothing!\n\nIn your script, `testObject` is supposed to be the duck part to spin. But you never told Unity *which* part it is! So when your script tries to spin it (`testObject.transform.Rotate(...)`), Unity gets confused and says: *\"Hey! You didn’t tell me what to spin! This is empty!\"* That’s the error!\n\nWhy? Because this line in your code:\n\n```csharp\ntestObject = GetComponentInChildren<GameObject>();\n```\n\ndoesn’t work—the `GetComponentInChildren<>()` wants a “Component” like Rigidbody or Animator, *not* a GameObject, so it returns nothing.\n\n**How to fix it (like I’m five style!):**\n\n- Go to Unity Editor, click your duck.\n- Look at the “test” script in the inspector.\n- You’ll see the empty box for **testObject**.\n- Drag the duck part (or any GameObject you want to spin) into that box.\n\nNow your script knows what to spin, and the error goes away! 🦆✨\n\nTry this, quack! Does that help?",
+    "timestamp": 1763239292600,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "can you help me",
+    "timestamp": 1763240125815,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack quack! You said you want help but no recent errors show up? That’s a little tricky! Can you tell me exactly what’s not working or what you want help with? Like, is the duck not moving or spinning, or something else? That way I can quack better advice! 🦆✨",
+    "timestamp": 1763240127421,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "i want to animate my duck",
+    "timestamp": 1763240149416,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! If you want to animate your duck and no errors are showing, here’s a simple path to start:\n\n1. **Add an Animator component** to your duck GameObject in the scene (select duck, then Add Component > Animator).\n\n2. **Create an Animator Controller** asset (right-click in Project > Create > Animator Controller) and assign it to your duck’s Animator.\n\n3. **Add animation clips** (or create new ones with Unity’s Animation window) for duck motions, like idle, flap, or walk.\n\n4. In the Animator Controller, set up states with these clips and transitions between them.\n\n5. Trigger these animations either by default or from your script (e.g., using `Animator.SetTrigger()` or `SetBool()`).\n\nSince you have 2 animations already, try dragging those clips into the Animator Controller and see your duck animate in play mode!\n\nQuack! Want tips on making new animations or setting up script calls?",
+    "timestamp": 1763240152040,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "yes",
+    "timestamp": 1763240168671,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! Yes! Your project has no recent errors, so you’re good to go for animating your duck. Wanna start adding animations now? 🦆✨",
+    "timestamp": 1763240169954,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "yes",
+    "timestamp": 1763240178178,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! Yes! No recent errors means you’re all set to animate your duck. Want me to help you step-by-step with creating animations or setting up the Animator?",
+    "timestamp": 1763240179216,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "yes",
+    "timestamp": 1763240189893,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! Yes!",
+    "timestamp": 1763240190449,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "can you tell me what my project has",
+    "timestamp": 1763240217426,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! From what you shared, your project has:\n\n- A “test” script as a MonoBehaviour attached to your duck in the scene, which controls some physics and rotation.\n- Some editor-only scripts (inside Editor folder) for building and managing assets, not active during gameplay.\n- Your duck GameObject with a Rigidbody, Collider, and your “test” script.\n- No Animator or animations set up yet (you mentioned wanting to animate).\n\nSo basically, you’ve got basic physics and a placeholder script on the duck, plus tools for asset building in the editor, but no animation system active yet.\n\nQuack quack! Does that sound right? What do you want to add next?",
+    "timestamp": 1763240219445,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "do you know whats in my test script",
+    "timestamp": 1763240243135,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! Sure thing! From your earlier message, your **test script has**:\n\n- A public GameObject called `testObject` (which you want to rotate).\n- In `Start()`, you try to assign `testObject` using something like `GetComponentInChildren<GameObject>()` (which doesn’t work).\n- In `Update()`, you rotate `testObject` a little each frame using `testObject.transform.Rotate(...)`.\n\nSo basically, the script tries to spin a child GameObject every frame.\n\nDoes that match what you have? Quack! What part feels tricky?",
+    "timestamp": 1763240245063,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "i dont understand",
+    "timestamp": 1763240327863,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "i dont understand",
+    "timestamp": 1763240337983,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "i dont understand",
+    "timestamp": 1763240346313,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "Do you still remember my project",
+    "timestamp": 1763487540051,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "Do you still remember my project",
+    "timestamp": 1763487551395,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "Quack...",
+    "timestamp": 1763487656659,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "Quack...",
+    "timestamp": 1763487666370,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack... Yes, I remember your project! You made a \"test\" script that tries to spin a part of your duck. Your script has a public GameObject called `testObject` that you want to rotate every frame.\n\nQuack! Tell me, what part confuses you most? The way you find `testObject` or how the rotation works? Quack quack!",
+    "timestamp": 1763487668486,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "everything confuses me",
+    "timestamp": 1763487689233,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! It’s totally okay to feel confused—everyone starts somewhere! Let’s break it down duck-step by duck-step. 🦆\n\n1. **What is a GameObject?**  \nIt’s like a LEGO block in your scene—a piece you can move, rotate, or add stuff to.\n\n2. **What’s a script?**  \nA script is like a tiny brain you attach to a GameObject to tell it what to do.\n\n3. **What’s `testObject` in your script?**  \nIt’s the LEGO block you want to spin.\n\n4. **Finding `testObject`:**  \nYour script tries to find which piece to spin. The way you tried (`GetComponentInChildren<GameObject>()`) doesn’t work because GameObjects aren’t components—you want to find a child GameObject in a different way.\n\n5. **Rotating it:**  \n`testObject.transform.Rotate(...)` means, “Turn this LEGO block a little every frame.”\n\nQuack! Does that help a little? What part should I explain more? Don’t be shy—let’s quack this confusion away, one step at a time!",
+    "timestamp": 1763487693775,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "timestamp": 1763488146691,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "timestamp": 1763488158393,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! Hi there! What are you quacking about today? 🦆 Quack quack!",
+    "timestamp": 1763488160392,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "",
+    "timestamp": 1763488161406,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! I see you want me to help, but I’m missing the rest of your question or the helpers you mentioned. Could you please share the full thing? Quack quack!",
+    "timestamp": 1763488163302,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "yeah im getting some api error",
+    "timestamp": 1763488183947,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! API errors can be tricky! Can you tell me what the error message says exactly? Quack quack! Also, what kind of API are you trying to use? Any code you can share would help me help you better! Quack!",
+    "timestamp": 1763488185491,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "OpenAI error: 400 Bad Request",
+    "timestamp": 1763488208400,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! A 400 Bad Request means something’s wrong with the info you’re sending to the API. Maybe a missing parameter or wrong format. 🦆\n\nCan you tell me:\n- What kind of request are you making? (POST, GET, etc.)  \n- What data or body are you sending?  \n- Any snippet of your code?  \n\nQuack quack! Let’s figure out what’s making your request unhappy!",
+    "timestamp": 1763488211315,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "you see my errors",
+    "timestamp": 1763488392638,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "you see my errors",
+    "timestamp": 1763488395990,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "you see my errors",
+    "timestamp": 1763488396961,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "you see my errors",
+    "timestamp": 1763488397010,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "you see my errors",
+    "timestamp": 1763488397422,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "help",
+    "timestamp": 1763751576915,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "help",
+    "timestamp": 1763751592335,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! Looks like your error says testObject isn't assigned, so when you try to use testObject.transform, it’s null and causes the crash. 🦆\n\nCan you see where in your code `testObject` gets set? On line 19, you use `GetComponentInChildren<GameObject>()` — that’s tricky! Unity doesn't let you get a GameObject component like that. Instead, you might want to get a component on a child (like a script or Rigidbody), or assign the GameObject directly in the inspector.\n\nTry assigning `testObject` right in the Unity Inspector by dragging your object there — that usually fixes UnassignedReferenceException errors. Quack quack!\n\nWhat do you think about that?",
+    "timestamp": 1763751595417,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "Quack...",
+    "timestamp": 1763751691350,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "Quack...",
+    "timestamp": 1763752914492,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "Quack...",
+    "timestamp": 1763752926563,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! I see you want me to answer, but I’m missing the full question and helpers. Could you please share them? Quack quack!",
+    "timestamp": 1763752928457,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "Quack...",
+    "timestamp": 1763753038877,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack! Seems like your message is just \"Quack...\" — could you explain what you want me to do with that? Maybe a riddle or a code? Let me know what you're thinking! Quack quack!",
+    "timestamp": 1763753041067,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "Quack...",
+    "timestamp": 1763755607740,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack quack! If there are no recent errors in Unity and all you have is \"Quack...\", I’d say your code is probably running smooth! 🦆\n\nMaybe “Quack...” means everything’s fine and your duck is happy? How do you feel about your project right now? Quack!",
+    "timestamp": 1763755609617,
+    "isSummary": false
+  }
+]

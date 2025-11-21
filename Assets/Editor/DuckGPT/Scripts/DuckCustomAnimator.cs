@@ -106,8 +106,8 @@ public class DuckCustomAnimator
     {
         return new Dictionary<string, (string, int)>
         {
-            { "jump", ("Assets/Editor/DuckAI/Animations/duck_jump", 4) },
-            { "talk", ("Assets/Editor/DuckAI/Animations/duck_talk", 4) },
+            { "jump", ("Assets/Editor/DuckGPT/Animations/duck_jump", 4) },
+            { "talk", ("Assets/Editor/DuckGPT/Animations/duck_talk", 4) },
 
 
         };

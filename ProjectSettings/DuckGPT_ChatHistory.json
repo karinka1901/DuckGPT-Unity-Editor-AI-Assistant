@@ -1,0 +1,26 @@
+[
+  {
+    "role": "user",
+    "content": "Quack...",
+    "timestamp": 1763756490661,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack quack! 🦆 Looks like you have a scene with several objects. What exactly are you trying to figure out or do with this hierarchy? Maybe something about the duck or one of the components? Tell me your thought process!",
+    "timestamp": 1763756492846,
+    "isSummary": false
+  },
+  {
+    "role": "user",
+    "content": "Quack...",
+    "timestamp": 1763758068724,
+    "isSummary": false
+  },
+  {
+    "role": "assistant",
+    "content": "Quack quack! 🦆 Seems like you wanted to share helpers, but I didn’t get them. Could you please send them again? Also, what’s your question about the scene or these objects? Let’s waddle through it together!",
+    "timestamp": 1763758070231,
+    "isSummary": false
+  }
+]

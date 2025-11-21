@@ -1,4 +1,4 @@
-// Assets/Editor/DuckAI/EditorJsonUtils.cs
+// Assets/Editor/DuckGPT/EditorJsonUtils.cs
 using System;
 using System.Text;
 using UnityEngine;

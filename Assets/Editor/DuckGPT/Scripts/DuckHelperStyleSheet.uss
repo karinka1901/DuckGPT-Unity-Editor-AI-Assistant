@@ -67,3 +67,42 @@
     color: purple;
     align-self: center;
 }
+
+/* Toggle row for small control buttons */
+.toggle-container {
+    height: 50px;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 2px;
+    
+}
+
+/* Individual toggle buttons inside the row */
+.toggle-button {
+    width: 33%;
+
+    padding-top: 6px;
+    padding-bottom: 6px;
+    background-color: khaki;
+    color: black;
+    border-radius: 4px;
+    align-self: center;
+}
+
+/* Hover/active states */
+.toggle-button:hover {
+    background-color: orange;
+    cursor: pointer;
+}
+
+.toggle-button:active {
+    background-color: darkorange;
+}
+
+.toggle-button.selected {
+    background-color: orange;
+    color: white;
+}

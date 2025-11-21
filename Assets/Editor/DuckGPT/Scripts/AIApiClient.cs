@@ -11,7 +11,7 @@ using UnityEngine;
 /// </summary>
 
 #if UNITY_EDITOR
-public static class AIApiClient 
+internal static class AIApiClient 
 {
     public static string defaultModel = "gpt-4.1-mini";
     public static string openAiUrl = "https://api.openai.com/v1/chat/completions";
@@ -24,12 +24,14 @@ public static class AIApiClient
   //  private static string pineconeEndpoint = ""
 
     #region Chat with OpenAI
-    /// Sends a chat prompt to OpenAI and returns the response as a string.
+    /// Sends a chat prompt to OpenAI and returns the response as a string (raw JSON).
+    /// Includes short-term memory and persists assistant replies.
     public static async Task<string> SendChatAsync(string userPrompt) 
     {
         // Retrieve API key and model from configuration
         string apiKey = ApiConfiguration.GetSavedKey();
         string model = ApiConfiguration.GetSavedModel();
+        string systemPrompt = ApiConfiguration.GetSystemPrompt();    
 
         //Use default model if none specified
         if (string.IsNullOrWhiteSpace(apiKey)) throw new ArgumentException("API key required. Set it up in Window/RubberDuckHelper/Settings");
@@ -37,6 +39,14 @@ public static class AIApiClient
             model = defaultModel;
             Debug.LogError($"No model specified, using default: {model}");
         }
+        if (string.IsNullOrWhiteSpace(systemPrompt))
+        {
+            DebugColor.Log("DuckGPT: system prompt was empty; using a safe default prompt.","orange");
+            systemPrompt = "You are a helpful rubber duck AI. Provide concise, actionable guidance and debugging suggestions.";
+        }
+
+        // Build system behavior and messages with memory
+        var messages = ChatMemory.BuildRequestMessages(systemPrompt, userPrompt);
 
         // Set up HTTP client
         using HttpClient client = new();
@@ -47,11 +57,7 @@ public static class AIApiClient
         var requestData = new
         {
             model,
-            messages = new[]
-            {
-              new { role = "assistant", content = "You are a friendly rubber duck AI You respond conversationally and encourage the user to explain their thought process. Always add some duck noises. Also try to give shorter answers. dont give solutions but give guidance" },
-              new { role = "user", content = userPrompt }
-            }
+            messages
         };
 
         // Serialize request data to JSON
@@ -66,6 +72,22 @@ public static class AIApiClient
         if (!response.IsSuccessStatusCode)
         {
             throw new Exception($"OpenAI error: {(int)response.StatusCode} {response.ReasonPhrase} \n{responceText}");
+        }
+
+        // Persist assistant reply into memory
+        try
+        {
+            var jObj = Unity.Plastic.Newtonsoft.Json.Linq.JObject.Parse(responceText);
+            string contentText = jObj["choices"]?[0]?["message"]?["content"]?.ToString();
+            if (!string.IsNullOrEmpty(contentText))
+            {
+                ChatMemory.AddAssistant(contentText);
+                ChatMemory.Save();
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"DuckGPT: Failed to parse assistant reply for memory. {e.Message}");
         }
 
         return responceText;
