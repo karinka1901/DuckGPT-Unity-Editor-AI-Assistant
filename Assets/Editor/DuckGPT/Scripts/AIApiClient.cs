@@ -29,9 +29,9 @@ internal static class AIApiClient
     public static async Task<string> SendChatAsync(string userPrompt) 
     {
         // Retrieve API key and model from configuration
-        string apiKey = ApiConfiguration.GetSavedKey();
-        string model = ApiConfiguration.GetSavedModel();
-        string systemPrompt = ApiConfiguration.GetSystemPrompt();    
+        string apiKey = AppConfiguration.GetSavedKey();
+        string model = AppConfiguration.GetSavedModel();
+        string systemPrompt = AppConfiguration.GetSystemPrompt();    
 
         //Use default model if none specified
         if (string.IsNullOrWhiteSpace(apiKey)) throw new ArgumentException("API key required. Set it up in Window/RubberDuckHelper/Settings");
@@ -100,7 +100,7 @@ internal static class AIApiClient
     public static async Task<string> RequestSpeechAsync(string inputText)
     {
         // Retrieve Eleven Labs API key from configuration
-        string elevenLabsApiKey = ApiConfiguration.GetSavedElevenLabsKey();
+        string elevenLabsApiKey = AppConfiguration.GetSavedElevenLabsKey();
 
         if (string.IsNullOrWhiteSpace(elevenLabsApiKey)) throw new ArgumentException("Eleven Labs API key required. Set it up in Window/RubberDuckHelper/Settings");
 

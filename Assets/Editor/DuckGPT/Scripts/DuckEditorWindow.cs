@@ -6,20 +6,27 @@ using UnityEngine.UIElements;
 
 public class DuckEditorWindow : EditorWindow
 {
-    [MenuItem("Window/RubberDuckHelper/Launch")]
-    public static void ShowWindow() => GetWindow<DuckEditorWindow>("Duck Helper");
+    [MenuItem("Window/DuckGPT/Launch")]
+    public static void ShowWindow() => GetWindow<DuckEditorWindow>("DuckGPT");
 
     [Header("Other viariables")]
     private Image duckImage;
     private DuckCustomAnimator duckAnimator;
     private TextField questionInput;
-    
-    TextField boxField;
-    TextElement chatText;
+
+    private TextField boxField;
+    private TextElement chatText;
+    private Label duckLabel;
+    private string userName = "You";
+    private string duckName;
+
+    private Button micBtn;
+    private Texture2D micIcon;
+    private bool micEnabled = false;
 
     #region Console Log Variables
     private bool consoleLogSelected = false;
-    public Button consoleLogButton;
+    public Button consoleButton;
     private string consoleErrors = "";
     #endregion
 
@@ -33,26 +40,36 @@ public class DuckEditorWindow : EditorWindow
     private bool scriptsSelected = false;
     public Button scriptsButton;
     private string scriptContext = "";
+
+    private Color selectedColor;
+    private Color standardColor = new(153f/255f, 153f / 255f, 153f / 255f);
+    private string selectedColorHex;
     #endregion
 
     private void Awake()
     {
         // Set window title 
-        titleContent = new GUIContent("Duck Helper");
+        titleContent = new GUIContent("DuckGPT");
 
         // Load icon texture (2)
         Texture2D iconTexture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/DuckGPT/Textures/duck.png");
-        if (iconTexture == null) return;
-        else titleContent = new GUIContent("Duck Helper", iconTexture);
+        if (iconTexture == null)
+        {
+            DebugColor.Log("MISSING ICON", "cyan");
+            return;
+        }
+        else titleContent = new GUIContent("DuckGPT", iconTexture);
 
         ConsoleLogHandler.GetRecentErrors();
 
     }
 
-
     private void OnEnable()
     {
         EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+        duckName = AppConfiguration.GetSavedName();
+        selectedColor = AppConfiguration.GetSavedColor();
+        selectedColorHex = ColorUtility.ToHtmlStringRGB(selectedColor);
     }
 
     private void OnDisable()
@@ -61,76 +78,168 @@ public class DuckEditorWindow : EditorWindow
         EditorApplication.update -= AnimateDuck;
     }
 
-public void CreateGUI()
+    private void OnPlayModeStateChanged(PlayModeStateChange state)
     {
+        if (state == PlayModeStateChange.EnteredEditMode)
+        {
+            ConsoleLogHandler.RefreshFromConsoleHistory();
+            consoleErrors = ConsoleLogHandler.GetRecentErrors(10);
+
+            Repaint();
+
+        }
+    }
+
+    #region GUI SETUP
+    public void CreateGUI()
+    {
+        selectedColor = AppConfiguration.GetSavedColor();
+        selectedColorHex = ColorUtility.ToHtmlStringRGB(selectedColor);
+
+
         var root = rootVisualElement;
+        root.Clear();
         root.AddToClassList("duck-editor-root");
 
-        var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/Editor/DuckGPT/Scripts/DuckHelperStyleSheet.uss");
-        if (styleSheet != null)
+        //fixed window size
+        minSize = new Vector2(534, 933);
+
+        //Stylesheet
+        StyleSheet styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/Editor/DuckGPT/Scripts/DuckHelperStyleSheet.uss");
+        if (styleSheet != null) root.styleSheets.Add(styleSheet);
+
+        // Window background
+        root.style.backgroundImage = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/DuckGPT/Textures/DuckGPT_UI/MainWindow.png");
+
+        #region DUCK VISUAL CONTAINER 
+
+        var duckVisual = new VisualElement { name = "duck-visual" };
+        duckVisual.AddToClassList("duck-visual");
+        root.Add(duckVisual);
+
+        string duckName = AppConfiguration.GetSavedName();
+        if (string.IsNullOrEmpty(duckName))
         {
-            root.styleSheets.Add(styleSheet);
+            duckName = "DuckGPT";
         }
 
-        #region DUCK IMAGE ANIMATION
-
-        var titleLabel = new Label("DuckGPT");
-        titleLabel.name = "title-label";
-        titleLabel.AddToClassList("title-label");
-        root.Add(titleLabel);
+        // Duck Label
+        duckLabel = new()
+        {
+            name = "duck-label",
+            text = duckName
+        };
+        duckLabel.style.color = AppConfiguration.GetSavedColor();
+        duckLabel.AddToClassList("duck-label");
+        duckVisual.Add(duckLabel);
 
         // DUCK IMAGE
-        var animDefs = new Dictionary<string, (string, int)>
-        {
-            { "jump", ("Assets/Editor/DuckGPT/Animations/duck_jump", 4) },
-            { "wave", ("Assets/Editor/Textures/duck_wave", 6) },
-            { "talk", ("Assets/Editor/Textures/duck_talk", 5) }
-        };
         duckAnimator = new DuckCustomAnimator(DuckCustomAnimator.GetAllAnimations());
-
         duckImage = new Image
         {
-            image = duckAnimator.GetCurrentFrame(),
-            scaleMode = ScaleMode.ScaleToFit
+            name = "duck-image",
+            image = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/DuckGPT/Textures/duck.png")
+
         };
-        duckImage.name = "duck-image";
         duckImage.AddToClassList("duck-image");
-        root.Add(duckImage);
-
-        //  EditorApplication.update += AnimateDuck;
-
-        Button animateButton = new Button(() =>
-        {
-            chatText.text = "";
-        });
-
-        animateButton.name = "animate-duck-button";
-        animateButton.AddToClassList("animate-duck-button");
-        //  root.Add(animateButton);
-
+        duckVisual.Add(duckImage);
 
         #endregion
 
-        VisualElement toggleContainer = new()
+        #region TITLE BAR CONTAINER
+
+        VisualElement titleBarContainer = new() { name = "title-bar-container" };
+        titleBarContainer.AddToClassList("title-bar-container");
+        root.Add(titleBarContainer);
+
+        VisualElement titleBarLogo = new() { name = "title-bar-logo" };
+        titleBarLogo.AddToClassList("title-bar-logo");
+        titleBarContainer.Add(titleBarLogo);
+        // Icon and logo
+        Image tabTitleLogo = new()
         {
-            name = "toggle-container"
+            name = "tab-title-logo",
+            image = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/DuckGPT/Textures/DuckGPT_UI/duckLogo.png")
         };
-        toggleContainer.AddToClassList("toggle-container");
-        root.Add(toggleContainer);
+        tabTitleLogo.AddToClassList("tab-title-logo");
+        titleBarLogo.Add(tabTitleLogo);
 
-        #region AI QUESTION INPUT AND BUTTON
-
-        consoleLogButton = new(() =>
-         {
-             IncludeConsoleLog();
-         })
+        TextElement tabTitleText = new()
         {
-            text = "Console Log",
-            name = "console-log-button"
+            name = "tab-title-text",
+            text = "DuckGPT"
         };
-        consoleLogButton.AddToClassList("toggle-button");
-        toggleContainer.Add(consoleLogButton);
+        tabTitleText.AddToClassList("tab-title-text");
+        titleBarLogo.Add(tabTitleText);
 
+        #region TAB BUTTONS 
+        var tabButtons = new VisualElement { name = "tab-buttons" };
+        tabButtons.AddToClassList("tab-buttons");
+        titleBarContainer.Add(tabButtons);
+
+        // Info Button
+        Button infoBtn = new(() =>
+        {
+            chatText.text = "";
+            ChatMemory.Clear();
+        })
+        {
+            name = "clear-chat-btn",
+            text = "⌫"
+        };
+        infoBtn.AddToClassList("mini-custom-button");
+        infoBtn.tooltip = "Clear chat history";
+        tabButtons.Add(infoBtn);
+
+        // Menu Button
+        Button menuBtn = new(() =>
+        {
+            AppConfiguration.ShowWindow();
+        })
+
+        {
+            name = "menu-btn",
+            text = "⁝"
+        };
+        menuBtn.AddToClassList("menu-btn");
+        menuBtn.AddToClassList("mini-custom-button");
+        menuBtn.tooltip = "App configuartion window";
+
+        tabButtons.Add(menuBtn);
+
+        // Close Button
+        Button closeBtn = new(() =>
+        {
+            this.Close();
+        })
+        {
+            name = "close-btn",
+            text = "X"
+        };
+        closeBtn.AddToClassList("close-btn");
+        closeBtn.AddToClassList("mini-custom-button");
+
+        tabButtons.Add(closeBtn);
+
+        #endregion
+        #endregion
+
+        #region CONTENT AREA
+
+        VisualElement contentArea = new() //contaner for buttons/text box/input
+        {
+            name = "content-area"
+        };
+        contentArea.AddToClassList("content-area");
+        root.Add(contentArea);
+
+        #region PROJECT BUTTONS CONTAINER (RIGHT SIDE)
+        VisualElement projectButtons = new()
+        {
+            name = "project-buttons"
+        };
+
+        // ------------------------Hierarchy Button------------------------------
         hierarchyButton = new(() =>
         {
             IncludeHierachy();
@@ -139,9 +248,24 @@ public void CreateGUI()
             text = "Hierarchy",
             name = "hierarchy-button"
         };
-        hierarchyButton.AddToClassList("toggle-button");
-        toggleContainer.Add(hierarchyButton);
+        hierarchyButton.AddToClassList("custom-button");
+        hierarchyButton.AddToClassList("hierarchy-button");
+        hierarchyButton.tooltip = "Include Hierarchy Context";
 
+        // -----------------------Console Log Button------------------------------
+        consoleButton = new(() =>
+        {
+            IncludeConsoleLog();
+        })
+        {
+            text = "Console",
+            name = "console-button"
+        };
+        consoleButton.AddToClassList("custom-button");
+        consoleButton.AddToClassList("console-button");
+        consoleButton.tooltip = "Include ConsoleLog Errors Context";
+
+        // -------------------------- Scripts Button------------------------------
         scriptsButton = new(() =>
         {
             IncludeScripts();
@@ -150,121 +274,185 @@ public void CreateGUI()
             text = "Scripts",
             name = "scripts-button"
         };
-        scriptsButton.AddToClassList("toggle-button");
-        toggleContainer.Add(scriptsButton);
+        scriptsButton.AddToClassList("custom-button");
+        scriptsButton.AddToClassList("scripts-button");
+        scriptsButton.tooltip = "Include Scripts Context";
 
-        Button analyzeProjectButton = new(() =>
+
+        //---------------------------Scan Project Button------------------------------
+        Button scanProjectButton = new(() =>
         {
             AnalyzeProject();
         })
         {
-            text = "Analyze Project",
-            name = "analyze-project-button"
+            text = "Scan Project",
+            name = "scan-project-button"
         };
-        analyzeProjectButton.AddToClassList("analyze-project-button");
-        root.Add(analyzeProjectButton);
+        scanProjectButton.AddToClassList("project-button");
+        scanProjectButton.AddToClassList("custom-button");
+        scanProjectButton.tooltip = "Scans and analyzes all the files in current project";
 
-        var scrollView = new ScrollView();
-        scrollView.name = "chat-scroll-view";
-        scrollView.AddToClassList("chat-scroll-view");
-        root.Add(scrollView);
+        projectButtons.Add(hierarchyButton);
+        projectButtons.Add(consoleButton);
+        projectButtons.Add(scriptsButton);
+        projectButtons.Add(scanProjectButton);
+        contentArea.Add(projectButtons);
+        #endregion
+
+        #region TEXT BOX AREA (LEFT SIDE)
+        var textBoxArea = new VisualElement { name = "text-box-area" };
+        root.Add(textBoxArea);
+
+        Box textBox = new()
+        {
+            name = "text-box",
+        };
+        textBox.AddToClassList("text-box");
+        textBoxArea.Add(textBox);
+
+        var scrollView = new ScrollView { name = "chat-scroll-view" };
+        textBoxArea.Add(scrollView);
 
         chatText = new TextElement
         {
             name = "chat-text",
-            text = "",
+            text = ""
         };
         chatText.AddToClassList("chat-text");
         scrollView.Add(chatText);
 
-        questionInput = new TextField("")
-        {
-            multiline = true,
-            value = "Quack..."
-        };
-        questionInput.name = "question-input";
-        questionInput.AddToClassList("question-input");
-        root.Add(questionInput);
+        root.Add(contentArea);
+        contentArea.Add(textBoxArea);
 
-        Button askButton = new Button(async () => await OnAskButtonPressedAsync())
-   
-        {
-            text = "Ask the Duck"
-        };
-        askButton.name = "ask-duck-button";
-        askButton.AddToClassList("ask-duck-button");
-        root.Add(askButton);
+        #endregion
+        #endregion
 
-        Button clearChat = new Button(() =>
+        #region INPUT AREA (BELOW TEXT BOX) 
+        VisualElement inputArea = new()
         {
-            chatText.text = "";
+            name = "input-area"
+        };
+        micIcon=AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/DuckGPT/Textures/DuckGPT_UI/MicIcon.png");
+        micBtn = new(() => 
+        {
+            EnableMic();
 
         })
         {
-            text = "Clear Chat"
+            name = "mic-btn",
+            iconImage = micIcon,
         };
+        micBtn.AddToClassList("mini-custom-button");
+        micBtn.AddToClassList("mic-btn");
 
-
-
-        #endregion
-    }
-
-    private void AnimateDuck()
-    {
-        if (duckAnimator == null || duckImage == null) return;
-        bool done = duckAnimator.Animate(out var frame);
-        duckImage.image = frame;
-
-        if (done)
-            EditorApplication.update -= AnimateDuck;
-    }
-
-    private void OnPlayModeStateChanged(PlayModeStateChange state)
-    {
-        if (state == PlayModeStateChange.EnteredEditMode)
+        questionInput = new TextField("")
         {
-            ConsoleLogHandler.RefreshFromConsoleHistory();
-            consoleErrors = ConsoleLogHandler.GetRecentErrors(10);
-            
-            Repaint(); 
-                       
-        }
-    }
+            name = "question-input",
+            multiline = false,
+            value = "Quack!"
+        };
+        questionInput.AddToClassList("question-input");
 
+        Button askButton = new(async () => await OnAskButtonPressedAsync())
+        {
+            text = "Quack!",
+            name = "ask-button"
+
+        };
+        askButton.AddToClassList("custom-button");
+        askButton.AddToClassList("ask-button");
+
+        inputArea.Add(micBtn);
+        inputArea.Add(questionInput);
+        inputArea.Add(askButton);
+        contentArea.Add(inputArea);
+    }
+    #endregion
+
+    #endregion
+
+    #region CONTEXT BUTTONS LOGIC
     private void IncludeHierachy()
     {
         hierarchySelected = !hierarchySelected;
         hierarchyButton?.EnableInClassList("selected", hierarchySelected);
-   
+        chatText.text += $"\n<color=#696969>{(hierarchySelected ? "Including hierarchy context in responses." : "Excluding hierarchy context from responses.")}</color>\n";
+
+        if (hierarchySelected)
+        {
+            selectedColor = AppConfiguration.GetSavedColor();
+            hierarchyButton.style.backgroundColor = selectedColor;
+        }
+        else
+        {
+            hierarchyButton.style.backgroundColor = standardColor;
+        }
     }
 
     private void IncludeConsoleLog()
     {
         consoleLogSelected = !consoleLogSelected;
-        consoleLogButton?.EnableInClassList("selected", consoleLogSelected);
+        consoleButton?.EnableInClassList("selected", consoleLogSelected);
+        chatText.text += $"\n<color=#696969>{(consoleLogSelected ? "Including console log errors in responses." : "Excluding console log errors from responses.")}</color>\n";
+
+        if (consoleLogSelected)
+        {
+            selectedColor = AppConfiguration.GetSavedColor();
+            consoleButton.style.backgroundColor = selectedColor;
+        }
+        else
+        {
+            consoleButton.style.backgroundColor = standardColor;
+        }
     }
 
     private void IncludeScripts()
     {
-       scriptsSelected = !scriptsSelected;
+        scriptsSelected = !scriptsSelected;
         scriptsButton?.EnableInClassList("selected", scriptsSelected);
+        chatText.text += $"\n<color=#696969>{(scriptsSelected ? "Including script context in responses." : "Excluding script context from responses.")}</color>\n";
+
+        if (scriptsSelected)
+        {
+            selectedColor = AppConfiguration.GetSavedColor();
+            scriptsButton.style.backgroundColor = selectedColor;
+        }
+        else
+        {
+            scriptsButton.style.backgroundColor = standardColor;
+        }
+
     }
 
     private void AnalyzeProject()
     {
+        duckAnimator.SetAnimation("confuse", 4);
+        EditorApplication.update += AnimateDuck;
+
+        
+
         string analysis = ScriptsHandler.AnalyzeProject(forceRefresh: true);
-        chatText.text += "\n\n🦆: I've completed a comprehensive analysis of your project! I now understand:\n" +
+        chatText.text += $"\n\n<color=#{selectedColorHex}>{duckName}</color>:I've completed a comprehensive analysis of your project! I now understand:\n" +
                          "• All your scripts and their purposes\n" +
                          "• Your scene structure and GameObjects\n" +
                          "• Component dependencies\n" +
                          "• Asset organization\n\n" +
-                         "Ask me anything about your project structure, code patterns, or debugging!";
+                         "Ask me anything about your project structure, code patterns, or debugging!\n";
+        this.Repaint();
     }
 
+    #endregion
+
+    #region ASK BUTTON LOGIC
     public async Task OnAskButtonPressedAsync()
     {
-        duckAnimator.SetAnimation("talk", 8);
-        EditorApplication.update += AnimateDuck;
+         duckAnimator.SetAnimation("talk", 1000);
+         EditorApplication.update += AnimateDuck;
+
+        if (duckName != AppConfiguration.GetSavedName() || selectedColor != AppConfiguration.GetSavedColor())
+        {
+            UpdateDuckName();
+        }
 
         // Smart hierarchy: only include if changes occurred or manually requested
         if (hierarchySelected)
@@ -277,14 +465,14 @@ public void CreateGUI()
         }
 
         consoleErrors = consoleLogSelected ? "\nUnity Errors:\n" + ConsoleLogHandler.GetRecentErrors(2) : "";
-        
+
         // Add script context
         scriptContext = "";
         if (scriptsSelected)
         {
             scriptContext = ScriptsHandler.GetRecentlyModifiedScripts(2);
         }
-        
+
         // If there are console errors, automatically get script context for those errors
         if (!string.IsNullOrEmpty(consoleErrors) && consoleErrors != "\nUnity Errors:\nNo recent errors.")
         {
@@ -300,23 +488,33 @@ public void CreateGUI()
 
         // Add project analysis context if available
         string projectAnalysis = "";
-        if (!string.IsNullOrEmpty(ScriptsHandler.GetProjectAnalysis()) && 
+        if (!string.IsNullOrEmpty(ScriptsHandler.GetProjectAnalysis()) &&
             !ScriptsHandler.GetProjectAnalysis().Contains("No project analysis available"))
         {
             projectAnalysis = "\n--- Project Analysis Context ---\n" + ScriptsHandler.GetProjectAnalysis();
         }
+        string userPrompt = "";
+        string helperText = $"\nUse this as helpers: {consoleErrors} {hierarchy} {mentionedGOComponents} {scriptContext} {projectAnalysis}";
 
+        if(string.IsNullOrEmpty(questionInput.value)) questionInput.value = "Quack!";
+
+        if (hierarchySelected || scriptsSelected || consoleLogSelected)
+        {
+            userPrompt = questionInput.value + helperText;
+        }
+        else userPrompt = questionInput.value;
         // Build augmented prompt
-        string userPrompt = "Answer this: " + questionInput.value + 
-                           "\nUse this as helpers: " + consoleErrors + hierarchy + mentionedGOComponents + scriptContext + projectAnalysis;
-        
+
+
         // Remember the user's natural question; augmented prompt will be injected at send-time
         ChatMemory.AddUser(questionInput.value);
         ChatMemory.Save();
 
-        string apiKey = ApiConfiguration.GetSavedKey();
-        string model = ApiConfiguration.GetSavedModel();
-        chatText.text += "\n\n You: " + questionInput.value;
+        string apiKey = AppConfiguration.GetSavedKey();
+        string model = AppConfiguration.GetSavedModel();
+
+        // Append user message to chat
+        chatText.text += $"<color=#e6cc00>{userName}</color>: {questionInput.value}";
 
         Debug.Log($"User prompt: {userPrompt}");
 
@@ -330,23 +528,85 @@ public void CreateGUI()
             string response = await AIApiClient.SendChatAsync(userPrompt);
             var jObj = Unity.Plastic.Newtonsoft.Json.Linq.JObject.Parse(response);
             string content = jObj["choices"]?[0]?["message"]?["content"]?.ToString();
-            chatText.text = "\n\n You: " + questionInput.value + "\n\n \U0001f986: " + content;
+
+            // Append AI response to chat (instead of overwriting)
+            chatText.text += $"\n\n<color=#{selectedColorHex}>{duckName}</color>: {content}\n\n";
+            EditorApplication.update -= AnimateDuck;
+
+
+            // Clear input field
             questionInput.value = "";
+
+            // Auto-scroll to bottom
+            ScrollView scrollView = chatText.parent as ScrollView;
+            if (scrollView != null)
+            {
+                scrollView.scrollOffset = new Vector2(0, scrollView.contentContainer.layout.height);
+            }
+
             DebugColor.Log(content, "Yellow");
 
-          //  #region PLAY DUCK AUDIO RESPONSE
-          //  string audioPath = await AIApiClient.RequestSpeechAsync(content);
-          //  DuckSpeechPlayer.PlayTTSAudio(audioPath);
-           // #endregion
+            #region PLAY DUCK AUDIO RESPONSE
+            if (micEnabled)
+            {
+                string audioPath = await AIApiClient.RequestSpeechAsync(content);
+                DuckSpeechPlayer.PlayTTSAudio(audioPath);
+            }
+            #endregion
         }
         catch (System.Exception ex)
         {
             Debug.LogError("[DuckGPT] Error: " + ex.Message);
+            chatText.text += $"\n\n{duckName}: Quack! Something went wrong: {ex.Message}";
+            EditorApplication.update -= AnimateDuck;
         }
-    
+
+    }
+    #endregion
+
+    #region OTHER METHODS
+    public void UpdateDuckName()
+    {
+        if (duckLabel != null)
+        {
+            string newName = AppConfiguration.GetSavedName();
+            duckName = newName;
+
+            Color nameColor = AppConfiguration.GetSavedColor();
+            selectedColor = nameColor;
+            selectedColorHex = ColorUtility.ToHtmlStringRGB(nameColor);
+
+            duckLabel.text = string.IsNullOrEmpty(newName) ? "DuckGPT" : newName;
+            duckLabel.style.color = nameColor;
+        }
     }
 
-   
+    private void AnimateDuck()
+    {
+        if (duckAnimator == null || duckImage == null) return;
+        bool done = duckAnimator.Animate(out var frame);
+        duckImage.image = frame;
+
+        if (done)
+            EditorApplication.update -= AnimateDuck;
+    }
+
+    private void EnableMic()
+    {
+        micEnabled = !micEnabled;
+
+        Texture2D micIcon = micEnabled ? AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/DuckGPT/Textures/DuckGPT_UI/MicIconOn.png")
+                                       : AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/DuckGPT/Textures/DuckGPT_UI/MicIcon.png");
+
+        micBtn.iconImage = micIcon;
+
+        string statusMessage = micEnabled ? "Microphone enabled." : "Microphone disabled.";
+
+        chatText.text += $"\n<color=#696969>{statusMessage}</color>\n";
+    }
+
+    #endregion
+
 }
 
 //references:
@@ -362,6 +622,5 @@ public void CreateGUI()
 
 
 
-// TO DO:
-// - create error buttons when errors are present 
-// - clicking error button adds error context to prompt
+
+

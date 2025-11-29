@@ -210,7 +210,7 @@ public static class ChatMemory
         try
         {
             // Use a lightweight model for summarization
-            string apiKey = ApiConfiguration.GetSavedKey();
+            string apiKey = AppConfiguration.GetSavedKey();
             if (string.IsNullOrWhiteSpace(apiKey)) return null;
 
             using HttpClient client = new();
@@ -252,15 +252,7 @@ public static class ChatMemory
             return null;
         }
     }
+ 
 
-#if UNITY_EDITOR
-    [UnityEditor.MenuItem("Window/RubberDuckHelper/Clear Chat History")]
-    private static void MenuClearHistory()
-    {
-        Clear();
-        DebugColor.Log("DuckGPT: Chat history cleared.", "Yellow");
-    }
-
-#endif
 }
 #endif

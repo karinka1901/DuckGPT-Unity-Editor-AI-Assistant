@@ -1,0 +1,215 @@
+.duck-editor-root {
+    padding: 0;
+}
+
+/* Tab Buttons Container */
+.tab-buttons {
+    background-color:red;
+    position: absolute;
+    flex-direction: row;
+    felx-wrap: wrap;
+    flex-shrink: 10;
+}
+
+.close-btn,
+.info-btn,
+.menu-btn {
+    width: 34px;
+    height: auto;
+}
+
+/* Duck Visual Container */
+#duck-visual {
+    position: absolute;
+    left: 75px;
+    top: 18px;
+    width: 360px;
+    height: 290px;
+}
+
+#duck-label {
+    width: 360px;
+    height: 40px;
+}
+
+#duck-image {
+    width: 360px;
+    height: 250px;
+    margin-top: 0;
+}
+
+/* Project Buttons Container */
+#project-buttons {
+    position: absolute;
+    right: 10px;
+    top: 330px;
+    width: 110px;
+}
+
+#scan-project-btn,
+#console-btn,
+#hierarchy-btn,
+#scripts-btn {
+    width: 110px;
+    height: 28px;
+    margin-bottom: 10px;
+}
+
+#scripts-btn {
+    margin-bottom: 0;
+}
+
+/* Text Box Area */
+#text-box-area {
+    position: absolute;
+    left: 85px;
+    top: 330px;
+    width: 265px;
+    height: 160px;
+}
+
+#text-box {
+    width: 265px;
+    height: 160px;
+}
+
+#chat-scroll-view {
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    width: 257px;
+    height: 152px;
+}
+
+#chat-text {
+    color: black;
+    font-size: 14px;
+    white-space: normal;
+    -unity-word-wrap: true;
+}
+
+/* Input Area */
+#input-area {
+    position: absolute;
+    left: 85px;
+    top: 500px;
+    width: 395px;
+    height: 26px;
+    flex-direction: row;
+}
+
+#mic-btn {
+    width: 26px;
+    height: 26px;
+    margin-right: 4px;
+}
+
+#input-box-container {
+    width: 235px;
+    height: 26px;
+    margin-right: 4px;
+}
+
+#input-box {
+    width: 235px;
+    height: 26px;
+}
+
+#question-input {
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    width: 227px;
+    height: 18px;
+    background-color: transparent;
+    border-width: 0;
+}
+
+#question-input > #unity-text-input {
+    background-color: transparent;
+    border-width: 0;
+    padding: 2px;
+    color: black;
+}
+
+#ask-btn {
+    width: 110px;
+    height: 26px;
+}
+
+/* Legacy styles */
+.ask-duck-button {
+    background-color: yellow;
+    color: black;
+}
+
+.ask-duck-button:hover {
+    background-color: orange;
+    cursor: link;
+}
+
+#animate-duck-button {
+    position: absolute;
+    height: 50px;
+    width: 50px;
+    cursor: link;
+}
+
+.box-field {
+    width: 50%;
+    height: 200px;
+    min-height: 100px;
+    max-height: 400px;
+    align-self: flex-end;
+    margin-left: auto;
+    margin-right: 0;
+    padding: 10px;   
+    border-color: orange;
+    background-color: yellow;
+    white-space: pre-wrap;
+    overflow: scroll;
+}
+
+.title-label {
+    font-size: 52px;
+    font-weight: bold;
+    color: purple;
+    align-self: center;
+}
+
+/* Toggle row for small control buttons */
+.toggle-container {
+    height: 50px;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 2px;
+}
+
+/* Individual toggle buttons inside the row */
+.toggle-button {
+    width: 33%;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    background-color: khaki;
+    color: black;
+    border-radius: 4px;
+    align-self: center;
+}
+
+/* Hover/active states */
+.toggle-button:hover {
+    background-color: orange;
+    cursor: pointer;
+}
+
+.toggle-button:active {
+    background-color: darkorange;
+}
+
+.toggle-button.selected {
+    background-color: orange;
+    color: white;
+}

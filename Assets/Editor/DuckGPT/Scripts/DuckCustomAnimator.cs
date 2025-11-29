@@ -59,7 +59,7 @@ public class DuckCustomAnimator
         lastFrameTime = EditorApplication.timeSinceStartup;
     }
 
-    public Texture2D GetCurrentFrame()
+    public Texture2D GetCurrentFrame() // Returns the current frame of the active animation
     {
         if (currentAnimation == null || !animations.ContainsKey(currentAnimation)) return null;
         var frames = animations[currentAnimation];
@@ -106,7 +106,7 @@ public class DuckCustomAnimator
     {
         return new Dictionary<string, (string, int)>
         {
-            { "jump", ("Assets/Editor/DuckGPT/Animations/duck_jump", 4) },
+            { "confuse",("Assets/Editor/DuckGPT/Animations/duck_confused", 4)  },
             { "talk", ("Assets/Editor/DuckGPT/Animations/duck_talk", 4) },
 
 

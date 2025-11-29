@@ -754,15 +754,5 @@ public static class ScriptsHandler
         return context.ToString();
     }
 
-#if UNITY_EDITOR
-  
-    [MenuItem("Window/RubberDuckHelper/Clear Analysis Cache")]
-    private static void MenuClearAnalysisCache()
-    {
-        ClearAnalysisCache();
-        EditorUtility.DisplayDialog("Duck Helper", "Analysis cache cleared.", "OK");
-    }
-   
-#endif
 }
 

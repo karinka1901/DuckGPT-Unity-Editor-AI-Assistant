@@ -1,108 +1,371 @@
+/* ROOT WINDOW */
 .duck-editor-root {
-
-    padding: 10px;
+    padding: 0;
+    position: relative;
+    -unity-font-definition: none;
+        background-color: rgb(0, 20, 120);
+    -unity-font: url("project://database/Assets/Editor/DuckGPT/Font/tahoma.ttf");
+    font-size: 20px;
 }
 
-.duck-image {
-    width: auto;
+/* TITLE BAR*/
 
-}
-
-
-#question-input{
-    width: 100%;
-}
-#unity-text-input{
-    width: 100%;
-
-}
-
-.ask-duck-button{
-    background-color: yellow;
-    color: black;
-}
-
-.ask-duck-button:hover{
-    background-color: orange;
-    cursor: link;
-}
-
-#animate-duck-button{
-    position: absolute;
-    height: 50px;
-    width: 50px;
-    cursor: link;
-}
-
-.box-field {
-        width: 50%;
-    height: 200px;
-    min-height: 100px;
-    max-height: 400px;
-    align-self: flex-end;
-    margin-left: auto;
-    margin-right: 0;
-    padding: 10px;   
-    border-color: orange;
-    background-color: yellow;
-    white-space: pre-wrap;
-    overflow: scroll;
-}
-
-#chat-text{
-    color: black;
-    font-size: 18px;
-    overflow: scroll;
-}
-
-.chat-scroll-view{
-    height: 50%;
-    background-color: grey;
-    
-}
-
-.title-label{
-    font-size: 52px;
-    font-weight: bold;
-    color: purple;
-    align-self: center;
-}
-
-/* Toggle row for small control buttons */
-.toggle-container {
-    height: 50px;
+.title-bar-container{
+    position: relative;
     flex-direction: row;
-    flex-wrap: nowrap;
-    gap: 8px;
-    align-items: center;
-    justify-content: flex-start;
-    margin-bottom: 2px;
-    
+    justify-content: space-between;
 }
 
-/* Individual toggle buttons inside the row */
-.toggle-button {
-    width: 33%;
+.title-bar-logo{
+    flex-direction: row;
+    justify-content: space-evenly;
+    left: 4px;
+}
+.tab-title-logo {
+    align-self: flex-start;
+    width: 25px;
+    height: 17px;
+    top: 5px;
+}
 
-    padding-top: 6px;
-    padding-bottom: 6px;
-    background-color: khaki;
-    color: black;
-    border-radius: 4px;
+.tab-title-text{
+    align-self: center;
+    font-size: 14px;
+    color: rgb(105,105,105);
+    -unity-font: url("project://database/Assets/Editor/DuckGPT/Font/WindowsXPFont.otf");
+}
+
+.tab-buttons {
+    position: relative;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    height: 30px;
+    align-self: flex-end;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 8px;
+    padding-right: 8px;
+    margin: 0px;
+}
+
+.close-btn,
+.info-btn,
+.menu-btn {
+    cursor: pointer;
+    margin-left: 2px;
+}
+
+
+
+/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
+/* DUCK VISUAL AREA */
+.duck-visual {
+    position: relative;
+    top: 37px;
+    left: 0px;
+    right: 35px;
+    height: 0px;
+    align-items: center;
+    align-self: center;
+    justify-content: center;
+}
+
+#duck-label {
+    top: 0px;
+    width: 100%;
+    position: relative;
+    left: 22px;
+    font-size: 55px;
+    color: rgb(255, 215, 0);
+    -unity-font: url("project://database/Assets/Editor/DuckGPT/Font/WindowsXPFont.otf");
+ 
+}
+
+#duck-image {
+    position: absolute;
+    top: 65px;
+    width: 300px;
+    height: 300px;
+    scale: 2 2 1;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+
+
+/* CONTENT AREA - contains chat and buttons */
+.content-area {
+    position: relative;
+    align-self: center;
+    width: 97%;
+    height: 52%;
+    top: 404px;
+    bottom: 14px;
+    padding-top:4px;
+    padding-bottom:12px;
+    flex-direction: column;
+
+    background-color: rgb(128, 128, 128);
+    border-top-color: rgb(221, 221, 221);
+    border-right-color: black;
+    border-left-color:  rgb(185, 185, 185);
+    border-bottom-color: black;
+
+    border-bottom-width: 2.69px;
+    border-left-width: 1.5px;
+    border-right-width: 2px;
+    border-top-width: 1.5px;
+}
+
+/* RIGHT BUTTON COLUMN - now horizontal row */
+#project-buttons {
+    width: 97%;
+    height: 36px;
+    flex-direction: row;
+    align-self: center;
+    justify-content: flex-start;
+   
+
+}
+
+/* Left button group */
+#hierarchy-button,
+#scripts-button,
+#console-button
+{
+    width: 20%;
+}
+
+#scan-project-button  {
+    left: 10%;
+     width: 25%;
+}
+
+/* CHAT / TEXT BOX AREA */
+#text-box-area {
+    flex-grow: 1;
+    width: 97%;
+    padding-left: 0px;
+    padding-right: 0px;
+    font-size: 15px;
     align-self: center;
 }
 
-/* Hover/active states */
-.toggle-button:hover {
-    background-color: orange;
-    cursor: pointer;
+.text-box {
+    background-color: rgb(42, 42, 42);
+    border-top-color: rgb(24, 24, 24);
+    border-right-color: rgb(154, 154, 154);
+    border-left-color: black;
+    border-bottom-color: rgb(154, 154, 154);
+    border-bottom-width: 2px;
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    width: 100%;
+    height: 100%;
+    padding: 4px;
+
 }
 
-.toggle-button:active {
-    background-color: darkorange;
+#chat-scroll-view {
+    position: absolute;
+    height: 100%;
+    width: 100%;
 }
 
-.toggle-button.selected {
-    background-color: orange;
-    color: white;
+#chat-text {
+    color: #E0E0E0;
+    font-size: 15px;
+    white-space: normal;
+    -unity-word-wrap: true;
+    padding-left: 12px;
+    padding-right: 10px;
+    padding-top: 11px;
+    padding-bottom: 4px;
+   -unity-font: url("project://database/Assets/Editor/DuckGPT/Font/tahoma.ttf");
 }
+
+.unity-scroller{
+    right: 7px;
+}
+
+#unity-low-button{
+    top: 3px;
+    background-color: rgb(128, 128, 128);
+    cursor: link;
+}
+
+#unity-high-button{
+    bottom: 4px;
+    background-color: rgb(128, 128, 128);
+    cursor: link;
+}
+
+#unity-dragger{
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    background-color: rgb(128, 128 128);
+}
+
+/* INPUT ROW */
+#input-area {
+  position: relative;
+  flex-direction: row;
+  align-self: center;
+  justify-content: space-evenly;
+  height: 36px;
+  left: 2px;
+  margin-top: 0px;
+  top: 11px;
+  width: 97%;
+}
+
+#mic-btn {
+    position:relative;
+    align-self: flex-start;
+    width: 6%;
+    height: 30px;
+    margin: 0px;
+    right: 2px;
+    cursor: link;
+}
+
+
+#question-input {
+    position: relative;
+    flex-direction: row;
+    top: 0px;
+    width: 75%;
+    height: 30px;
+
+}
+
+#question-input > #unity-text-input {
+
+-unity-font: url("project://database/Assets/Editor/DuckGPT/Font/tahoma.ttf");
+font-size: 12px;
+background-color: rgb(42, 42, 42);
+    border-top-color: rgb(24, 24, 24);
+    border-right-color: rgb(154, 154, 154);
+    border-left-color: black;
+    border-bottom-color: rgb(154, 154, 154);
+    border-bottom-width: 2px;
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+}
+
+#ask-button {
+    align-self: flex-end;
+    top: -6px;
+    width: 16%;
+    height: 29px;
+    flex-shrink: 0;
+}
+
+.unity-button__image{
+    cursor: link;
+}
+
+/* CUSTOM BUTTON STYLE (for all interactive buttons) */
+.custom-button {
+    width: 89px;
+    height: 30px;
+    background-color: rgb(153, 153,153);
+    color: black;
+    -unity-font: url("project://database/Assets/Editor/DuckGPT/Font/W95FA.otf");
+    font-size: 15px;
+
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+
+    border-bottom-width: 1.77px;
+    border-left-width: 1.77px;
+    border-right-width: 1.77px;
+    border-top-width: 1.77px;
+
+    border-bottom-color: rgb(36, 36, 36);
+    border-left-color: rgb(190, 190, 190);
+    border-right-color: black;
+    border-top-color: rgb(204, 204, 204);
+
+    cursor: link;
+}
+
+
+.custom-button:hover {
+    background-color: rgb(166, 166, 166);
+}
+
+.custom-button:active {
+   background-color: rgb(104, 104, 104);
+    border-bottom-color: rgb(223, 223, 223);
+    border-left-color: rgb(64, 64, 64);
+    border-right-color: rgb(223, 223, 223);
+    border-top-color: rgb(64, 64, 64);
+}
+
+.custom-button.selected {
+/*    background-color: rgb(255, 215, 0); */
+    border-bottom-color: rgb(223, 223, 223);
+    border-left-color: rgb(64, 64, 64);
+    border-right-color: rgb(223, 223, 223);
+    border-top-color: rgb(64, 64, 64);
+}
+
+.mini-custom-button {
+width: 16px;
+height: 16px;
+background-color: rgb(153, 153,153);
+color: black;
+-unity-font: url("project://database/Assets/Editor/DuckGPT/Font/W95FA.otf");
+font-size: 13px;
+
+border-top-left-radius: 0px;
+border-top-right-radius: 0px;
+border-bottom-left-radius: 0px;
+border-bottom-right-radius: 0px;
+
+border-bottom-width: 0.18px;
+border-left-width: 1.67px;
+border-right-width: 1.67px;
+border-top-width: 1.5px;
+
+  border-bottom-color: rgb(36, 36, 36);
+    border-left-color: rgb(190, 190, 190);
+    border-right-color: black;
+    border-top-color: rgb(204, 204, 204);
+
+margin-bottom: 3px;
+margin-top: 0px;
+
+cursor: link;
+}
+
+
+.mini-custom-button:hover {
+background-color: rgb(166, 166, 166);
+}
+
+.mini-custom-button:active {
+background-color: rgb(104, 104, 104);
+border-bottom-color: rgb(223, 223, 223);
+border-left-color: rgb(64, 64, 64);
+border-right-color: rgb(223, 223, 223);
+border-top-color: rgb(64, 64, 64);
+}
+
+.mini-custom-button.selected {
+    background-color: rgb(104, 104, 104);
+     border-bottom-color: rgb(223, 223, 223);
+    border-left-color: rgb(64, 64, 64);
+    border-right-color: rgb(223, 223, 223);
+    border-top-color: rgb(64, 64, 64);
+}
+
+

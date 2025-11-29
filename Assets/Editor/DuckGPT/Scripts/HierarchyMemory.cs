@@ -359,17 +359,13 @@ public static class HierarchyMemory
             Debug.LogWarning($"DuckGPT: Failed to save hierarchy cache: {e.Message}");
         }
     }
-
-#if UNITY_EDITOR
-
-    [MenuItem("Window/RubberDuckHelper/Clear Hierarchy Cache")]
-    private static void MenuClearCache()
+    public static void MenuClearCache()
     {
         currentCache = null;
         if (File.Exists(CacheFilePath))
             File.Delete(CacheFilePath);
        DebugColor.Log("DuckGPT: Hierarchy cache cleared.", "Yellow");
     }
-#endif
+
 }
 #endif
