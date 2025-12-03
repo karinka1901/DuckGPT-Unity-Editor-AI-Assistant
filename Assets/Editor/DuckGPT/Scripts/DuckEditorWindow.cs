@@ -51,14 +51,14 @@ public class DuckEditorWindow : EditorWindow
         // Set window title 
         titleContent = new GUIContent("DuckGPT");
 
-        // Load icon texture (2)
-        Texture2D iconTexture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/DuckGPT/Textures/duck.png");
-        if (iconTexture == null)
-        {
-            DebugColor.Log("MISSING ICON", "cyan");
-            return;
-        }
-        else titleContent = new GUIContent("DuckGPT", iconTexture);
+        //// Load icon texture (2)
+        //Texture2D iconTexture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/DuckGPT/Textures/duck.png");
+        //if (iconTexture == null)
+        //{
+        //    DebugColor.Log("MISSING ICON", "cyan");
+        //    return;
+        //}
+        //else titleContent = new GUIContent("DuckGPT", iconTexture);
 
         ConsoleLogHandler.GetRecentErrors();
 
@@ -102,7 +102,8 @@ public class DuckEditorWindow : EditorWindow
         root.AddToClassList("duck-editor-root");
 
         //fixed window size
-        minSize = new Vector2(534, 933);
+        //minSize = new Vector2(534, 933);
+        minSize = new Vector2(534, 700);
 
         //Stylesheet
         StyleSheet styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/Editor/DuckGPT/Scripts/DuckHelperStyleSheet.uss");
@@ -380,6 +381,9 @@ public class DuckEditorWindow : EditorWindow
 
         if (hierarchySelected)
         {
+            duckAnimator.SetAnimation("confuse", 1);
+            EditorApplication.update += AnimateDuck;
+
             selectedColor = AppConfiguration.GetSavedColor();
             hierarchyButton.style.backgroundColor = selectedColor;
         }
@@ -391,12 +395,18 @@ public class DuckEditorWindow : EditorWindow
 
     private void IncludeConsoleLog()
     {
+
+      
         consoleLogSelected = !consoleLogSelected;
         consoleButton?.EnableInClassList("selected", consoleLogSelected);
         chatText.text += $"\n<color=#696969>{(consoleLogSelected ? "Including console log errors in responses." : "Excluding console log errors from responses.")}</color>\n";
 
         if (consoleLogSelected)
         {
+            duckAnimator.SetAnimation("errors", 1);
+            EditorApplication.update += AnimateDuck;
+
+
             selectedColor = AppConfiguration.GetSavedColor();
             consoleButton.style.backgroundColor = selectedColor;
         }
@@ -408,12 +418,17 @@ public class DuckEditorWindow : EditorWindow
 
     private void IncludeScripts()
     {
+       
+
         scriptsSelected = !scriptsSelected;
         scriptsButton?.EnableInClassList("selected", scriptsSelected);
         chatText.text += $"\n<color=#696969>{(scriptsSelected ? "Including script context in responses." : "Excluding script context from responses.")}</color>\n";
 
         if (scriptsSelected)
         {
+            duckAnimator.SetAnimation("read", 1);
+            EditorApplication.update += AnimateDuck;
+
             selectedColor = AppConfiguration.GetSavedColor();
             scriptsButton.style.backgroundColor = selectedColor;
         }
@@ -426,10 +441,11 @@ public class DuckEditorWindow : EditorWindow
 
     private void AnalyzeProject()
     {
-        duckAnimator.SetAnimation("confuse", 4);
+
+        duckAnimator.SetAnimation("scan", 1);
         EditorApplication.update += AnimateDuck;
 
-        
+
 
         string analysis = ScriptsHandler.AnalyzeProject(forceRefresh: true);
         chatText.text += $"\n\n<color=#{selectedColorHex}>{duckName}</color>:I've completed a comprehensive analysis of your project! I now understand:\n" +
@@ -438,7 +454,7 @@ public class DuckEditorWindow : EditorWindow
                          "• Component dependencies\n" +
                          "• Asset organization\n\n" +
                          "Ask me anything about your project structure, code patterns, or debugging!\n";
-        this.Repaint();
+ 
     }
 
     #endregion
@@ -603,6 +619,11 @@ public class DuckEditorWindow : EditorWindow
         string statusMessage = micEnabled ? "Microphone enabled." : "Microphone disabled.";
 
         chatText.text += $"\n<color=#696969>{statusMessage}</color>\n";
+
+        if (micEnabled) duckAnimator.SetAnimation("micOn", 1);
+        else duckAnimator.SetAnimation("micOff", 1);
+
+        EditorApplication.update += AnimateDuck;
     }
 
     #endregion

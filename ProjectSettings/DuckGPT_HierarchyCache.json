@@ -15,7 +15,7 @@
         "UniversalAdditionalCameraData (enabled=True)"
       ],
       "children": [],
-      "lastModified": 1764455677555
+      "lastModified": 1764543219756
     },
     {
       "name": "Directional Light",
@@ -39,10 +39,10 @@
             "Transform"
           ],
           "children": [],
-          "lastModified": 1764455677555
+          "lastModified": 1764543219756
         }
       ],
-      "lastModified": 1764455677555
+      "lastModified": 1764543219756
     },
     {
       "name": "Global Volume",
@@ -55,7 +55,7 @@
         "Volume (enabled=True)"
       ],
       "children": [],
-      "lastModified": 1764455677555
+      "lastModified": 1764543219756
     },
     {
       "name": "EventSystem",
@@ -69,7 +69,7 @@
         "InputSystemUIInputModule (enabled=True)"
       ],
       "children": [],
-      "lastModified": 1764455677555
+      "lastModified": 1764543219756
     },
     {
       "name": "duck",
@@ -80,7 +80,7 @@
       "components": [
         "Transform",
         "SpriteRenderer (enabled=True)",
-        "Animator (enabled=True)",
+        "Animator (enabled=False)",
         "Rigidbody2D",
         "test (enabled=True)"
       ],
@@ -105,28 +105,13 @@
                 "Transform"
               ],
               "children": [],
-              "lastModified": 1764455677555
+              "lastModified": 1764543219756
             }
           ],
-          "lastModified": 1764455677555
-        },
-        {
-          "name": "Cube",
-          "activeSelf": true,
-          "activeInHierarchy": true,
-          "tag": "Untagged",
-          "layer": "Default",
-          "components": [
-            "Transform",
-            "MeshFilter",
-            "MeshRenderer (enabled=True)",
-            "BoxCollider"
-          ],
-          "children": [],
-          "lastModified": 1764455677555
+          "lastModified": 1764543219756
         }
       ],
-      "lastModified": 1764455677555
+      "lastModified": 1764543219756
     },
     {
       "name": "Sphere",
@@ -141,7 +126,7 @@
         "SphereCollider"
       ],
       "children": [],
-      "lastModified": 1764455677555
+      "lastModified": 1764543219756
     },
     {
       "name": "h",
@@ -154,9 +139,9 @@
         "Rigidbody"
       ],
       "children": [],
-      "lastModified": 1764455677555
+      "lastModified": 1764543219756
     }
   ],
-  "lastCacheTime": 1764455677554,
-  "hierarchyHash": "521966930"
+  "lastCacheTime": 1764543219756,
+  "hierarchyHash": "-147116763"
 }

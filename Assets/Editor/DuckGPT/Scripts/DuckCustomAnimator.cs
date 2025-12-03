@@ -2,6 +2,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
+/// <summary>
+///  to do: add speed control
+/// </summary>
 public class DuckCustomAnimator
 {
     private Dictionary<string, List<Texture2D>> animations = new();
@@ -106,8 +109,19 @@ public class DuckCustomAnimator
     {
         return new Dictionary<string, (string, int)>
         {
-            { "confuse",("Assets/Editor/DuckGPT/Animations/duck_confused", 4)  },
+            
+            { "confuse",("Assets/Editor/DuckGPT/Animations/duck_confused", 8)},
             { "talk", ("Assets/Editor/DuckGPT/Animations/duck_talk", 4) },
+            { "squeeze", ("Assets/Editor/DuckGPT/Animations/duck_sqeeze", 4)},
+            { "read", ("Assets/Editor/DuckGPT/Animations/duck_reading", 9) },
+            { "mute", ("Assets/Editor/DuckGPT/Animations/duck_micOff", 7) },
+            { "errors", ("Assets/Editor/DuckGPT/Animations/duck_errors", 9) },
+            { "scan", ("Assets/Editor/DuckGPT/Animations/duck_scan", 14) },
+            { "micOn", ("Assets/Editor/DuckGPT/Animations/duck_micOn", 11) },
+            { "micOff", ("Assets/Editor/DuckGPT/Animations/duck_micOff", 8) },
+
+
+
 
 
         };
