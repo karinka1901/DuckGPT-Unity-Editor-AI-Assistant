@@ -130,9 +130,41 @@
 
 }
 
+.scripts-dropdown{
+    width: 20%;
+}
+
+.scripts-dropdown > Label {
+    display: none; 
+}
+
+.scripts-dropdown .unity-text-element{
+    color: black;
+}
+
+.scripts-dropdown .unity-base-popup-field__input {
+    background-color: rgb(153, 153, 153);
+    color: black;
+    -unity-font: url("project://database/Assets/Editor/DuckGPT/Font/W95FA.otf");
+    font-size: 15px;
+    padding: 4px;
+}
+
+.scripts-dropdown .unity-base-popup-field__input {
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+    border-bottom-width: 0px;
+    border-left-width: 0px;
+    border-right-width: 0px;
+    border-top-width: 0px;
+    color: black;
+     background-color: rgb(153, 153, 153);
+}
+
 /* Left button group */
 #hierarchy-button,
-#scripts-button,
 #console-button
 {
     width: 20%;
@@ -175,6 +207,9 @@
     width: 100%;
 }
 
+#unity-content-viewport{
+    height: 99%;}
+
 #chat-text {
     color: #E0E0E0;
     font-size: 15px;
@@ -182,8 +217,9 @@
     -unity-word-wrap: true;
     padding-left: 12px;
     padding-right: 10px;
-    padding-top: 11px;
+    padding-top: 0px;
     padding-bottom: 4px;
+    top: -24px;
    -unity-font: url("project://database/Assets/Editor/DuckGPT/Font/tahoma.ttf");
 }
 

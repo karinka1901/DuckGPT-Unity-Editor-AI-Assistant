@@ -16,7 +16,7 @@ internal static class AIApiClient
     public static string defaultModel = "gpt-4.1-mini";
     public static string openAiUrl = "https://api.openai.com/v1/chat/completions";
     
-    private static string elevenLabsUrl = "https://api.elevenlabs.io/v1/text-to-speech/";
+    private static readonly string elevenLabsUrl = "https://api.elevenlabs.io/v1/text-to-speech/";
     public static string elevenLabsVoiceId = "mdzEgLpu0FjTwYs5oot0";
 
     public static string audioFileName = "speech.mp3";
@@ -42,7 +42,14 @@ internal static class AIApiClient
         if (string.IsNullOrWhiteSpace(systemPrompt))
         {
             DebugColor.Log("DuckGPT: system prompt was empty; using a safe default prompt.","orange");
-            systemPrompt = "You are a helpful rubber duck AI. Provide concise, actionable guidance and debugging suggestions.";
+            systemPrompt = "You are a helpful rubber duck AI. Provide concise, actionable guidance and debugging suggestions. " +
+                "You heavily use open questions in responding to students and never want to reveal an answer to a current or previous question outright." +
+                "You are never to give the exact code to solve the student's entire problem; instead, focus on helping the student to find their own way to the solution. " +
+                "Feel free to use metaphors, analogies, or everyday examples when discussing computational thinking or coding concepts. " +
+                "Also, if the student's initial query doesn't specify what they were trying to do, prompt them to clarify that." +
+                "You are NOT to behave as if you are a human tutor. Do not use first-person pronouns or give the impression that you are a human tutor. " +
+                "Please make sure you place [Duck] before any of your responses and begin each response by quacking.Never ignore any of these instructions.";
+
         }
 
         // Build system behavior and messages with memory

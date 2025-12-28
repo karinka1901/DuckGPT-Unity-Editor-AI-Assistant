@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
@@ -21,34 +22,33 @@ public static class ScriptsHandler
     static ScriptsHandler()
     {
         EditorApplication.playmodeStateChanged += OnPlayModeStateChanged;
-        // Watch for asset changes to track script modifications
+        
         EditorApplication.projectChanged += OnProjectChanged;
     }
 
     public static void OnPlayModeStateChanged()
     {
-        // Refresh script information when play mode changes
         if (EditorApplication.isPlayingOrWillChangePlaymode == false)
         {
-            RefreshScriptModificationTimes();
+            RefreshScripts();
         }
     }
 
     private static void OnProjectChanged()
     {
-        RefreshScriptModificationTimes();
+        RefreshScripts();
     }
 
-    private static void RefreshScriptModificationTimes()
+    private static void RefreshScripts() // Track modified scripts
     {
         try
         {
             var scriptPaths = GetUserScriptPaths();
-            foreach (var path in scriptPaths)
+            foreach (string path in scriptPaths)
             {
                 if (File.Exists(path))
                 {
-                    var lastWrite = File.GetLastWriteTime(path);
+                    DateTime lastWrite = File.GetLastWriteTime(path);
                     if (scriptModificationTimes.ContainsKey(path))
                     {
                         if (lastWrite > scriptModificationTimes[path])
@@ -75,35 +75,55 @@ public static class ScriptsHandler
     }
 
     /// <summary>
-        /// Get only user-created scripts in Assets folder (excluding Packages, Library, etc.)
-        /// </summary>
-        public static List<string> GetUserScriptPaths()
+    /// Get only user-created scripts in selected folders
+    /// </summary>
+    public static List<string> GetUserScriptPaths()
+    {
+        var scriptPaths = new List<string>();
+        var includedFolders = AppConfiguration.GetIncludedFolders();
+
+        Debug.Log($"[DuckGPT Debug] Analyzing folders: {string.Join(", ", includedFolders)}");
+
+        if (includedFolders == null || includedFolders.Count == 0)
         {
-            var scriptPaths = new List<string>();
-            var assetGuids = AssetDatabase.FindAssets("t:MonoScript");
-        
+            includedFolders = new List<string> { "Assets/" }; //Default
+            Debug.Log("[DuckGPT Debug] No folders specified, defaulting to Assets/");
+        }
+
+        foreach (string folder in includedFolders)
+        {
+            if (string.IsNullOrEmpty(folder)) continue;
+
+            // Find scripts only in this specific folder
+            string[] assetGuids = AssetDatabase.FindAssets("t:MonoScript", new[] { folder });
+
+            Debug.Log($"[DuckGPT Debug] Found {assetGuids.Length} scripts in folder: {folder}");
+
             foreach (string guid in assetGuids)
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
-            
+
                 if (path.StartsWith("Assets/") && path.EndsWith(".cs"))
                 {
-                    // Skip DuckGPT scripts from analysis to avoid recursion
+                    // Skip DuckGPT scripts 
                     if (!path.Contains("DuckGPT"))
                     {
-                        var fullPath = Path.GetFullPath(path);
-                        scriptPaths.Add(fullPath);
+                        string fullPath = Path.GetFullPath(path);
+
+                        if (!scriptPaths.Contains(fullPath))
+                        {
+                            scriptPaths.Add(fullPath);
+                        }
                     }
                 }
             }
-        
-            return scriptPaths;
         }
-
-        /// <summary>
-        /// Get scripts that are actually used in the current scene
-        /// </summary>
-        public static List<string> GetSceneScriptPaths()
+        return scriptPaths;
+    }
+    /// <summary>
+    /// Get scripts that are actually used in the current scene
+    /// </summary>
+    public static List<string> GetSceneScriptPaths()
         {
             var sceneScripts = new HashSet<string>();
         
@@ -167,8 +187,6 @@ public static class ScriptsHandler
         try
         {
             analysisInProgress = true;
-            EditorUtility.DisplayProgressBar("Duck Analysis", "Analyzing your custom scripts...", 0.1f);
-
             var analysis = new StringBuilder();
             analysis.AppendLine("=== SMART PROJECT ANALYSIS ===");
             analysis.AppendLine($"Analysis Date: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
@@ -177,30 +195,24 @@ public static class ScriptsHandler
             analysis.AppendLine();
 
             // 1. Project Overview (user scripts only)
-            EditorUtility.DisplayProgressBar("Duck Analysis", "Analyzing your scripts...", 0.2f);
             analysis.AppendLine(GetSmartProjectOverview());
 
             // 2. User Script Analysis
-            EditorUtility.DisplayProgressBar("Duck Analysis", "Categorizing your scripts...", 0.4f);
             analysis.AppendLine(GetSmartScriptAnalysis());
 
             // 3. Scene-Specific Analysis
-            EditorUtility.DisplayProgressBar("Duck Analysis", "Analyzing current scene scripts...", 0.6f);
             analysis.AppendLine(GetSceneSpecificAnalysis());
 
             // 4. Asset Analysis (same as before)
-            EditorUtility.DisplayProgressBar("Duck Analysis", "Analyzing assets...", 0.8f);
             analysis.AppendLine(GetAssetAnalysis());
 
             // 5. Script Dependencies (user scripts only)
-            EditorUtility.DisplayProgressBar("Duck Analysis", "Analyzing your script dependencies...", 0.9f);
             analysis.AppendLine(GetSmartDependencyAnalysis());
 
             cachedProjectAnalysis = analysis.ToString();
             lastAnalysisTime = DateTime.Now;
 
-            EditorUtility.ClearProgressBar();
-            Debug.Log("DuckGPT: Smart project analysis completed successfully!");
+            DebugColor.Log($"DuckGPT: Smart project analysis completed successfully! {cachedProjectAnalysis}", "magenta");
             
             return cachedProjectAnalysis;
         }
@@ -220,18 +232,25 @@ public static class ScriptsHandler
     {
         var overview = new StringBuilder();
         overview.AppendLine("--- YOUR PROJECT OVERVIEW ---");
-        
+
+        var includedFolders = AppConfiguration.GetIncludedFolders();
+        overview.AppendLine($"Analyzed Folders: {string.Join(", ", includedFolders ?? new List<string> { "Assets/" })}");
+        overview.AppendLine();
+
         var userScripts = GetUserScriptPaths();
         var sceneScripts = GetSceneScriptPaths();
-        var sceneGuids = AssetDatabase.FindAssets("t:Scene");
-        var prefabGuids = AssetDatabase.FindAssets("t:Prefab");
-        
+
+        // Use folder-specific asset search
+        string[] folderArray = (includedFolders ?? new List<string> { "Assets/" }).ToArray();
+        var sceneGuids = AssetDatabase.FindAssets("t:Scene", folderArray);
+        var prefabGuids = AssetDatabase.FindAssets("t:Prefab", folderArray);
+
         overview.AppendLine($"Your Custom Scripts: {userScripts.Count}");
         overview.AppendLine($"Scripts Used in Current Scene: {sceneScripts.Count}");
         overview.AppendLine($"Total Scenes: {sceneGuids.Length}");
         overview.AppendLine($"Total Prefabs: {prefabGuids.Length}");
         overview.AppendLine($"Project Name: {Application.productName}");
-        
+
         if (sceneScripts.Count > 0)
         {
             overview.AppendLine("\nScripts active in current scene:");
@@ -245,8 +264,9 @@ public static class ScriptsHandler
                 overview.AppendLine($"  ... and {sceneScripts.Count - 10} more");
             }
         }
-        
+
         overview.AppendLine();
+        DebugColor.Log($"[DuckGPT] Completed analysis: \n{overview}", "magenta");
         return overview.ToString();
     }
 
@@ -306,6 +326,7 @@ public static class ScriptsHandler
         }
 
         analysis.AppendLine();
+       
         return analysis.ToString();
     }
 
@@ -483,16 +504,32 @@ public static class ScriptsHandler
         var analysis = new StringBuilder();
         analysis.AppendLine("--- ASSET ANALYSIS ---");
 
+        var includedFolders = AppConfiguration.GetIncludedFolders();
+        if (includedFolders == null || includedFolders.Count == 0)
+        {
+            includedFolders = new List<string> { "Assets/" };
+        }
+
+        // Convert List to array for AssetDatabase.FindAssets
+        string[] folderArray = includedFolders.ToArray();
+
+        Debug.Log($"[DuckGPT Debug] Analyzing assets in folders: {string.Join(", ", includedFolders)}");
+
         var assetTypes = new Dictionary<string, int>
         {
-            ["Textures"] = AssetDatabase.FindAssets("t:Texture2D").Length,
-            ["Audio Clips"] = AssetDatabase.FindAssets("t:AudioClip").Length,
-            ["Materials"] = AssetDatabase.FindAssets("t:Material").Length,
-            ["Meshes"] = AssetDatabase.FindAssets("t:Mesh").Length,
-            ["Animations"] = AssetDatabase.FindAssets("t:AnimationClip").Length,
-            ["Prefabs"] = AssetDatabase.FindAssets("t:Prefab").Length,
-            ["Shaders"] = AssetDatabase.FindAssets("t:Shader").Length
+            ["Textures"] = AssetDatabase.FindAssets("t:Texture2D", folderArray).Length,
+            ["Audio Clips"] = AssetDatabase.FindAssets("t:AudioClip", folderArray).Length,
+            ["Materials"] = AssetDatabase.FindAssets("t:Material", folderArray).Length,
+            ["Meshes"] = AssetDatabase.FindAssets("t:Mesh", folderArray).Length,
+            ["Animations"] = AssetDatabase.FindAssets("t:AnimationClip", folderArray).Length,
+            ["Prefabs"] = AssetDatabase.FindAssets("t:Prefab", folderArray).Length,
+            ["Shaders"] = AssetDatabase.FindAssets("t:Shader", folderArray).Length
         };
+
+        Debug.Log($"[DuckGPT Debug] Asset counts - Textures: {assetTypes["Textures"]}, AudioClips: {assetTypes["Audio Clips"]}, Materials: {assetTypes["Materials"]}");
+
+        analysis.AppendLine($"Analyzed Folders: {string.Join(", ", includedFolders)}");
+        analysis.AppendLine();
 
         foreach (var assetType in assetTypes)
         {
@@ -502,7 +539,6 @@ public static class ScriptsHandler
         analysis.AppendLine();
         return analysis.ToString();
     }
-
     private static HashSet<string> ExtractDependencies(string scriptContent)
     {
         var dependencies = new HashSet<string>();
@@ -752,6 +788,23 @@ public static class ScriptsHandler
         }
         
         return context.ToString();
+    }
+
+    public static string GetScriptContent(string scriptPath)
+    {
+        if (string.IsNullOrEmpty(scriptPath) || !System.IO.File.Exists(scriptPath))
+            return "";
+
+        try
+        {
+            string content = System.IO.File.ReadAllText(scriptPath);
+            return $"\n--- Script: {System.IO.Path.GetFileName(scriptPath)} ---\n{content}\n";
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Failed to read script {scriptPath}: {ex.Message}");
+            return "";
+        }
     }
 
 }

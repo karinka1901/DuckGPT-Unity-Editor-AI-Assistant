@@ -9,20 +9,25 @@ public class DuckEditorWindow : EditorWindow
     [MenuItem("Window/DuckGPT/Launch")]
     public static void ShowWindow() => GetWindow<DuckEditorWindow>("DuckGPT");
 
-    [Header("Other viariables")]
+    #region "Duck Viariables"
     private Image duckImage;
-    private DuckCustomAnimator duckAnimator;
-    private TextField questionInput;
-
-    private TextField boxField;
-    private TextElement chatText;
     private Label duckLabel;
+    private DuckCustomAnimator duckAnimator;
+    #endregion
+
+    #region Chat Variables
+    private TextField questionInput;
+    private TextElement chatText;
+    
     private string userName = "You";
     private string duckName;
+    #endregion
 
+    #region Microphone Variables
     private Button micBtn;
     private Texture2D micIcon;
     private bool micEnabled = false;
+    #endregion
 
     #region Console Log Variables
     private bool consoleLogSelected = false;
@@ -38,38 +43,38 @@ public class DuckEditorWindow : EditorWindow
 
     #region Script Variables
     private bool scriptsSelected = false;
-    public Button scriptsButton;
+    private DropdownField scriptsDropdown;
+    private List<string> availableScripts = new();
+    private Dictionary<string, string> scriptNameToPath = new(); 
+    private string selectedScriptPath = "";
     private string scriptContext = "";
+    #endregion
 
+    #region Color Variables
     private Color selectedColor;
-    private Color standardColor = new(153f/255f, 153f / 255f, 153f / 255f);
+    private Color standardColor = new(153f / 255f, 153f / 255f, 153f / 255f);
     private string selectedColorHex;
     #endregion
 
     private void Awake()
     {
-        // Set window title 
         titleContent = new GUIContent("DuckGPT");
 
-        //// Load icon texture (2)
-        //Texture2D iconTexture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/DuckGPT/Textures/duck.png");
-        //if (iconTexture == null)
-        //{
-        //    DebugColor.Log("MISSING ICON", "cyan");
-        //    return;
-        //}
-        //else titleContent = new GUIContent("DuckGPT", iconTexture);
-
         ConsoleLogHandler.GetRecentErrors();
-
     }
 
     private void OnEnable()
     {
+        // Subscribe to play mode state changes
         EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+
+        // Load saved duck name and color
         duckName = AppConfiguration.GetSavedName();
         selectedColor = AppConfiguration.GetSavedColor();
         selectedColorHex = ColorUtility.ToHtmlStringRGB(selectedColor);
+        
+        // Initialize speech player with animation callbacks
+        DuckSpeechPlayer.Initialize(StartDuckAnimation, StopDuckAnimation);
     }
 
     private void OnDisable()
@@ -86,22 +91,20 @@ public class DuckEditorWindow : EditorWindow
             consoleErrors = ConsoleLogHandler.GetRecentErrors(10);
 
             Repaint();
-
         }
     }
 
     #region GUI SETUP
     public void CreateGUI()
     {
+        // saved duck name and color from app configuration
         selectedColor = AppConfiguration.GetSavedColor();
         selectedColorHex = ColorUtility.ToHtmlStringRGB(selectedColor);
-
 
         var root = rootVisualElement;
         root.Clear();
         root.AddToClassList("duck-editor-root");
 
-        //fixed window size
         //minSize = new Vector2(534, 933);
         minSize = new Vector2(534, 700);
 
@@ -110,21 +113,19 @@ public class DuckEditorWindow : EditorWindow
         if (styleSheet != null) root.styleSheets.Add(styleSheet);
 
         // Window background
-        root.style.backgroundImage = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/DuckGPT/Textures/DuckGPT_UI/MainWindow.png");
+        root.style.backgroundImage = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/DuckGPT/Textures/MainWindow.png");
 
         #region DUCK VISUAL CONTAINER 
 
-        var duckVisual = new VisualElement { name = "duck-visual" };
+        //DUCK VISUAL CONTAINER
+        VisualElement duckVisual = new() { name = "duck-visual" };
         duckVisual.AddToClassList("duck-visual");
         root.Add(duckVisual);
 
+        //DUCK LABEL
         string duckName = AppConfiguration.GetSavedName();
-        if (string.IsNullOrEmpty(duckName))
-        {
-            duckName = "DuckGPT";
-        }
+        if (string.IsNullOrEmpty(duckName)) duckName = "DuckGPT";
 
-        // Duck Label
         duckLabel = new()
         {
             name = "duck-label",
@@ -136,6 +137,7 @@ public class DuckEditorWindow : EditorWindow
 
         // DUCK IMAGE
         duckAnimator = new DuckCustomAnimator(DuckCustomAnimator.GetAllAnimations());
+
         duckImage = new Image
         {
             name = "duck-image",
@@ -148,23 +150,25 @@ public class DuckEditorWindow : EditorWindow
         #endregion
 
         #region TITLE BAR CONTAINER
-
         VisualElement titleBarContainer = new() { name = "title-bar-container" };
         titleBarContainer.AddToClassList("title-bar-container");
         root.Add(titleBarContainer);
 
+        // DuckGPT Logo and Title
         VisualElement titleBarLogo = new() { name = "title-bar-logo" };
         titleBarLogo.AddToClassList("title-bar-logo");
         titleBarContainer.Add(titleBarLogo);
-        // Icon and logo
+
+        // Titlebar icon
         Image tabTitleLogo = new()
         {
             name = "tab-title-logo",
-            image = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/DuckGPT/Textures/DuckGPT_UI/duckLogo.png")
+            image = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/DuckGPT/Textures/duckLogo.png")
         };
         tabTitleLogo.AddToClassList("tab-title-logo");
         titleBarLogo.Add(tabTitleLogo);
 
+        // Titlebar label
         TextElement tabTitleText = new()
         {
             name = "tab-title-text",
@@ -186,7 +190,7 @@ public class DuckEditorWindow : EditorWindow
         })
         {
             name = "clear-chat-btn",
-            text = "⌫"
+            text = "↻"
         };
         infoBtn.AddToClassList("mini-custom-button");
         infoBtn.tooltip = "Clear chat history";
@@ -197,7 +201,6 @@ public class DuckEditorWindow : EditorWindow
         {
             AppConfiguration.ShowWindow();
         })
-
         {
             name = "menu-btn",
             text = "⁝"
@@ -219,6 +222,7 @@ public class DuckEditorWindow : EditorWindow
         };
         closeBtn.AddToClassList("close-btn");
         closeBtn.AddToClassList("mini-custom-button");
+        closeBtn.tooltip = "Close";
 
         tabButtons.Add(closeBtn);
 
@@ -251,7 +255,7 @@ public class DuckEditorWindow : EditorWindow
         };
         hierarchyButton.AddToClassList("custom-button");
         hierarchyButton.AddToClassList("hierarchy-button");
-        hierarchyButton.tooltip = "Include Hierarchy Context";
+        hierarchyButton.tooltip = "Include current scene hierarchy";
 
         // -----------------------Console Log Button------------------------------
         consoleButton = new(() =>
@@ -264,21 +268,74 @@ public class DuckEditorWindow : EditorWindow
         };
         consoleButton.AddToClassList("custom-button");
         consoleButton.AddToClassList("console-button");
-        consoleButton.tooltip = "Include ConsoleLog Errors Context";
+        consoleButton.tooltip = "Include recent console errors";
 
         // -------------------------- Scripts Button------------------------------
-        scriptsButton = new(() =>
-        {
-            IncludeScripts();
-        })
-        {
-            text = "Scripts",
-            name = "scripts-button"
-        };
-        scriptsButton.AddToClassList("custom-button");
-        scriptsButton.AddToClassList("scripts-button");
-        scriptsButton.tooltip = "Include Scripts Context";
 
+        availableScripts = GetAllProjectScripts();
+
+        List<string> displayNames = new() { "None", "All" };
+
+        foreach (string scriptPath in availableScripts)
+        {
+            string fileName = System.IO.Path.GetFileName(scriptPath);
+            displayNames.Add(fileName);
+            scriptNameToPath[fileName] = scriptPath;
+        }
+
+        scriptsDropdown = new DropdownField("Scripts", displayNames, 0)
+        {
+            name = "scripts-dropdown",
+            value = "Scripts"
+        };
+        scriptsDropdown.AddToClassList("scripts-dropdown");
+        scriptsDropdown.AddToClassList("custom-button");
+        scriptsDropdown.tooltip = "Select a script to include in context";
+
+        scriptsDropdown.RegisterValueChangedCallback(evt =>
+        {
+            VisualElement dropdownInput = scriptsDropdown.Q<VisualElement>(className: "unity-base-field__input");
+
+            if (evt.newValue == "None")
+            {
+                scriptsSelected = false;
+                selectedScriptPath = "";
+
+                scriptsDropdown.value = "Scripts";
+
+                chatText.text += $"\n\n<color=#696969>Script selection cleared.</color>";
+
+                if (dropdownInput != null) dropdownInput.style.backgroundColor = standardColor;
+            }
+
+            else if (evt.newValue == "All")
+            {
+                scriptsSelected = true;
+                selectedScriptPath = "ALL_SCRIPTS";
+
+                if (dropdownInput != null) dropdownInput.style.backgroundColor = selectedColor;
+
+                duckAnimator.SetAnimation("read", 1);
+                EditorApplication.update += AnimateDuck;
+
+                chatText.text += $"\n\n<color=#696969>All scripts will be included in context.</color>";
+            }
+            else // Specific script selected
+            {
+                if (scriptNameToPath.TryGetValue(evt.newValue, out string fullPath))
+                {
+                    selectedScriptPath = fullPath;
+                    scriptsSelected = true;
+
+                    if (dropdownInput != null) dropdownInput.style.backgroundColor = selectedColor;
+
+                    duckAnimator.SetAnimation("read", 1);
+                    EditorApplication.update += AnimateDuck;
+
+                    chatText.text += $"\n\n<color=#696969>Selected script: {evt.newValue}</color>";
+                }
+            }
+        });
 
         //---------------------------Scan Project Button------------------------------
         Button scanProjectButton = new(() =>
@@ -291,11 +348,11 @@ public class DuckEditorWindow : EditorWindow
         };
         scanProjectButton.AddToClassList("project-button");
         scanProjectButton.AddToClassList("custom-button");
-        scanProjectButton.tooltip = "Scans and analyzes all the files in current project";
+        scanProjectButton.tooltip = "Full project scan (comprehensive one-time analysis)";
 
         projectButtons.Add(hierarchyButton);
         projectButtons.Add(consoleButton);
-        projectButtons.Add(scriptsButton);
+        projectButtons.Add(scriptsDropdown);
         projectButtons.Add(scanProjectButton);
         contentArea.Add(projectButtons);
         #endregion
@@ -304,7 +361,7 @@ public class DuckEditorWindow : EditorWindow
         var textBoxArea = new VisualElement { name = "text-box-area" };
         root.Add(textBoxArea);
 
-        Box textBox = new()
+        UnityEngine.UIElements.Box textBox = new()
         {
             name = "text-box",
         };
@@ -333,8 +390,8 @@ public class DuckEditorWindow : EditorWindow
         {
             name = "input-area"
         };
-        micIcon=AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/DuckGPT/Textures/DuckGPT_UI/MicIcon.png");
-        micBtn = new(() => 
+        micIcon = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/DuckGPT/Textures/MicIcon.png");
+        micBtn = new(() =>
         {
             EnableMic();
 
@@ -372,12 +429,10 @@ public class DuckEditorWindow : EditorWindow
 
     #endregion
 
-    #region CONTEXT BUTTONS LOGIC
+    #region CONTEXT TOGGLES LOGIC
     private void IncludeHierachy()
     {
         hierarchySelected = !hierarchySelected;
-        hierarchyButton?.EnableInClassList("selected", hierarchySelected);
-        chatText.text += $"\n<color=#696969>{(hierarchySelected ? "Including hierarchy context in responses." : "Excluding hierarchy context from responses.")}</color>\n";
 
         if (hierarchySelected)
         {
@@ -386,91 +441,80 @@ public class DuckEditorWindow : EditorWindow
 
             selectedColor = AppConfiguration.GetSavedColor();
             hierarchyButton.style.backgroundColor = selectedColor;
+
+            hierarchyButton.EnableInClassList("selected", true);
+
+            chatText.text += $"\n\n<color=#696969>Including hierarchy context in responses.</color>";
         }
         else
         {
             hierarchyButton.style.backgroundColor = standardColor;
+
+            hierarchyButton.EnableInClassList("selected", false);
+
+            chatText.text += $"\n\n<color=#696969>Excluding hierarchy context from responses.</color>";
         }
     }
 
     private void IncludeConsoleLog()
     {
-
-      
         consoleLogSelected = !consoleLogSelected;
-        consoleButton?.EnableInClassList("selected", consoleLogSelected);
-        chatText.text += $"\n<color=#696969>{(consoleLogSelected ? "Including console log errors in responses." : "Excluding console log errors from responses.")}</color>\n";
 
         if (consoleLogSelected)
         {
             duckAnimator.SetAnimation("errors", 1);
             EditorApplication.update += AnimateDuck;
 
-
             selectedColor = AppConfiguration.GetSavedColor();
             consoleButton.style.backgroundColor = selectedColor;
+
+            consoleButton.EnableInClassList("selected", true);
+
+            chatText.text += $"\n\n<color=#696969>Including console log errors in responses.</color>";
         }
         else
         {
             consoleButton.style.backgroundColor = standardColor;
+
+            consoleButton.EnableInClassList("selected", false);
+
+            chatText.text += $"\n\n<color=#696969>Excluding console log errors from responses.</color>";
         }
-    }
-
-    private void IncludeScripts()
-    {
-       
-
-        scriptsSelected = !scriptsSelected;
-        scriptsButton?.EnableInClassList("selected", scriptsSelected);
-        chatText.text += $"\n<color=#696969>{(scriptsSelected ? "Including script context in responses." : "Excluding script context from responses.")}</color>\n";
-
-        if (scriptsSelected)
-        {
-            duckAnimator.SetAnimation("read", 1);
-            EditorApplication.update += AnimateDuck;
-
-            selectedColor = AppConfiguration.GetSavedColor();
-            scriptsButton.style.backgroundColor = selectedColor;
-        }
-        else
-        {
-            scriptsButton.style.backgroundColor = standardColor;
-        }
-
     }
 
     private void AnalyzeProject()
     {
-
         duckAnimator.SetAnimation("scan", 1);
         EditorApplication.update += AnimateDuck;
 
-
-
         string analysis = ScriptsHandler.AnalyzeProject(forceRefresh: true);
-        chatText.text += $"\n\n<color=#{selectedColorHex}>{duckName}</color>:I've completed a comprehensive analysis of your project! I now understand:\n" +
-                         "• All your scripts and their purposes\n" +
-                         "• Your scene structure and GameObjects\n" +
-                         "• Component dependencies\n" +
-                         "• Asset organization\n\n" +
-                         "Ask me anything about your project structure, code patterns, or debugging!\n";
- 
+        //chatText.text += $"\n\n<color=#{selectedColorHex}>{duckName}</color>:I've completed a comprehensive analysis of your project! I now understand:\n\n" +
+        //                 "🦆 All your scripts and their purposes\n" +
+        //                 "\U0001f986 Your scene structure and GameObjects\n" +
+        //                 "\U0001f986 Component dependencies\n" +
+        //                 "\U0001f986 Asset organization";
+        chatText.text += $"\n\n<color=#{selectedColorHex}>{duckName}</color>: Quack! I've completed a comprehensive analysis of your project! Ask me anything!";
     }
 
     #endregion
 
-    #region ASK BUTTON LOGIC
+    #region ASK BUTTON FUNCTIONALITY
     public async Task OnAskButtonPressedAsync()
     {
-         duckAnimator.SetAnimation("talk", 1000);
-         EditorApplication.update += AnimateDuck;
+        // Start thinking animation
+        duckAnimator.SetAnimation("thinking", 1);        
+        EditorApplication.update += AnimateDuck;
 
+        // Update duck name and color if changed in app configuration cs
         if (duckName != AppConfiguration.GetSavedName() || selectedColor != AppConfiguration.GetSavedColor())
         {
             UpdateDuckName();
         }
 
-        // Smart hierarchy: only include if changes occurred or manually requested
+        #region INCLUDE HIERARCHY
+        // Get specific GameObject context if mentioned in prompt
+        string mentionedGameObjectComponents = HierarchyMemory.GetGameObjectContext(questionInput.value);
+        // include only if changes occurred or manually requested
         if (hierarchySelected)
         {
             hierarchy = HierarchyMemory.GetFullHierarchyContext();
@@ -479,86 +523,93 @@ public class DuckEditorWindow : EditorWindow
         {
             hierarchy = HierarchyMemory.GetHierarchyContextIfChanged();
         }
+        #endregion
 
-        consoleErrors = consoleLogSelected ? "\nUnity Errors:\n" + ConsoleLogHandler.GetRecentErrors(2) : "";
+        #region INCLUDE CONSOLE LOG ERRORS
+        if (consoleLogSelected) consoleErrors = "\n\nUnity Errors:\n\n" + ConsoleLogHandler.GetRecentErrors(2);
+        else consoleErrors = "";
+        #endregion
 
-        // Add script context
-        scriptContext = "";
-        if (scriptsSelected)
+        #region INCLUDE SCRIPTS
+        if (scriptsSelected && !string.IsNullOrEmpty(selectedScriptPath))
         {
-            scriptContext = ScriptsHandler.GetRecentlyModifiedScripts(2);
-        }
-
-        // If there are console errors, automatically get script context for those errors
-        if (!string.IsNullOrEmpty(consoleErrors) && consoleErrors != "\nUnity Errors:\nNo recent errors.")
-        {
-            var errorScriptContext = ScriptsHandler.GetScriptContextFromErrors(consoleErrors);
-            if (!string.IsNullOrEmpty(errorScriptContext))
+            if (selectedScriptPath == "ALL_SCRIPTS")
             {
-                scriptContext += "\n--- Scripts Related to Errors ---\n" + errorScriptContext;
+                // Get content of all scripts
+                scriptContext = "";
+                foreach (string scriptPath in availableScripts)
+                {
+                    string fileName = System.IO.Path.GetFileName(scriptPath);
+                    string content = ScriptsHandler.GetScriptContent(scriptPath);
+                    scriptContext += $"\n\n--- {fileName} ---\n{content}\n";
+                }
+            }
+            else
+            {
+                // Get the content of the selected script
+                scriptContext = ScriptsHandler.GetScriptContent(selectedScriptPath);
             }
         }
+        else
+        {
+            scriptContext = "";
+        }
+        #endregion
 
-        // Get specific GameObject context if mentioned in prompt
-        string mentionedGOComponents = HierarchyMemory.GetGameObjectContext(questionInput.value);
-
-        // Add project analysis context if available
+        #region INCLUDE PROJECT ANALYSIS
         string projectAnalysis = "";
-        if (!string.IsNullOrEmpty(ScriptsHandler.GetProjectAnalysis()) &&
-            !ScriptsHandler.GetProjectAnalysis().Contains("No project analysis available"))
+        if (!string.IsNullOrEmpty(ScriptsHandler.GetProjectAnalysis()) && !ScriptsHandler.GetProjectAnalysis().Contains("No project analysis available"))
         {
             projectAnalysis = "\n--- Project Analysis Context ---\n" + ScriptsHandler.GetProjectAnalysis();
+            DebugColor.Log(projectAnalysis, "Cyan");
         }
-        string userPrompt = "";
-        string helperText = $"\nUse this as helpers: {consoleErrors} {hierarchy} {mentionedGOComponents} {scriptContext} {projectAnalysis}";
+        #endregion
 
-        if(string.IsNullOrEmpty(questionInput.value)) questionInput.value = "Quack!";
+        #region USER PROMPT
+        string userPrompt = "";
+        string helperText = $"\nUse this as helpers: {consoleErrors} {hierarchy} {mentionedGameObjectComponents} {scriptContext} {projectAnalysis}";
+
+        if (string.IsNullOrEmpty(questionInput.value)) questionInput.value = "Quack!";
 
         if (hierarchySelected || scriptsSelected || consoleLogSelected)
         {
             userPrompt = questionInput.value + helperText;
         }
-        else userPrompt = questionInput.value;
-        // Build augmented prompt
+        else userPrompt = questionInput.value + projectAnalysis;
 
+        #endregion
 
-        // Remember the user's natural question; augmented prompt will be injected at send-time
+        #region SAVE USER MESSAGE TO CHAT MEMORY
         ChatMemory.AddUser(questionInput.value);
         ChatMemory.Save();
+        #endregion
 
         string apiKey = AppConfiguration.GetSavedKey();
         string model = AppConfiguration.GetSavedModel();
-
-        // Append user message to chat
-        chatText.text += $"<color=#e6cc00>{userName}</color>: {questionInput.value}";
-
-        Debug.Log($"User prompt: {userPrompt}");
-
+        
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             Debug.LogWarning("No OpenAI API key set. Please set your API key from Window > RubberDuckHelper > Set API Key.");
+            chatText.text += $"\n\n<color=#{selectedColorHex}>{duckName}</color>: Quack! Please set your OpenAI API key in the App Configuration window.";
             return;
         }
+
+        // Append user message to chat
+        chatText.text += $"\n\n<color=#e6cc00>{userName}</color>: {questionInput.value}";
+
+        Debug.Log($"User prompt: {userPrompt}");
+        
         try
         {
             string response = await AIApiClient.SendChatAsync(userPrompt);
             var jObj = Unity.Plastic.Newtonsoft.Json.Linq.JObject.Parse(response);
             string content = jObj["choices"]?[0]?["message"]?["content"]?.ToString();
 
-            // Append AI response to chat (instead of overwriting)
-            chatText.text += $"\n\n<color=#{selectedColorHex}>{duckName}</color>: {content}\n\n";
-            EditorApplication.update -= AnimateDuck;
-
-
+            // Append AI response to chat 
+            chatText.text += $"\n\n<color=#{selectedColorHex}>{duckName}</color>: {content}";
+           
             // Clear input field
             questionInput.value = "";
-
-            // Auto-scroll to bottom
-            ScrollView scrollView = chatText.parent as ScrollView;
-            if (scrollView != null)
-            {
-                scrollView.scrollOffset = new Vector2(0, scrollView.contentContainer.layout.height);
-            }
 
             DebugColor.Log(content, "Yellow");
 
@@ -566,7 +617,7 @@ public class DuckEditorWindow : EditorWindow
             if (micEnabled)
             {
                 string audioPath = await AIApiClient.RequestSpeechAsync(content);
-                DuckSpeechPlayer.PlayTTSAudio(audioPath);
+                DuckSpeechPlayer.PlayTTSAudio(audioPath); 
             }
             #endregion
         }
@@ -581,6 +632,36 @@ public class DuckEditorWindow : EditorWindow
     #endregion
 
     #region OTHER METHODS
+    private List<string> GetAllProjectScripts()
+    {
+        List<string> scripts = new();
+
+        List<string> includedFolders = AppConfiguration.GetIncludedFolders();
+
+        // Only scan if folders are configured
+        if (includedFolders == null || includedFolders.Count == 0)
+        {
+            Debug.LogWarning("[DuckGPT] No folders configured. Please configure folders in the App Configuration window.");
+            return scripts; 
+        }
+
+        string[] guids = AssetDatabase.FindAssets("t:Script", includedFolders.ToArray());
+
+        foreach (string guid in guids)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+
+            // Exclude scripts from the DuckGPT folder
+            if (!path.Contains("/DuckGPT/") && !path.Contains("\\DuckGPT\\"))
+            {
+                scripts.Add(path);
+            }
+        }
+        scripts.Sort((a, b) => System.IO.Path.GetFileName(a).CompareTo(System.IO.Path.GetFileName(b))); // Sort alphabetically by file name
+
+        return scripts;
+    }
+
     public void UpdateDuckName()
     {
         if (duckLabel != null)
@@ -596,38 +677,58 @@ public class DuckEditorWindow : EditorWindow
             duckLabel.style.color = nameColor;
         }
     }
-
-    private void AnimateDuck()
-    {
-        if (duckAnimator == null || duckImage == null) return;
-        bool done = duckAnimator.Animate(out var frame);
-        duckImage.image = frame;
-
-        if (done)
-            EditorApplication.update -= AnimateDuck;
-    }
-
+ 
     private void EnableMic()
     {
         micEnabled = !micEnabled;
 
-        Texture2D micIcon = micEnabled ? AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/DuckGPT/Textures/DuckGPT_UI/MicIconOn.png")
-                                       : AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/DuckGPT/Textures/DuckGPT_UI/MicIcon.png");
-
+        if (micEnabled) 
+        {
+            DuckSpeechPlayer.canPlayAudio = true;
+            micIcon = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/DuckGPT/Textures/MicIconOn.png");
+            chatText.text += $"\n\n<color=#696969>Microphone enabled</color>";
+            duckAnimator.SetAnimation("micOn", 1);
+        }
+        else 
+        {
+            DuckSpeechPlayer.canPlayAudio = false;
+            micIcon = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/DuckGPT/Textures/MicIcon.png");
+            chatText.text += $"\n\n<color=#696969>Microphone disabled</color>";
+            duckAnimator.SetAnimation("micDrop", 1);
+        }
         micBtn.iconImage = micIcon;
-
-        string statusMessage = micEnabled ? "Microphone enabled." : "Microphone disabled.";
-
-        chatText.text += $"\n<color=#696969>{statusMessage}</color>\n";
-
-        if (micEnabled) duckAnimator.SetAnimation("micOn", 1);
-        else duckAnimator.SetAnimation("micOff", 1);
-
         EditorApplication.update += AnimateDuck;
     }
 
     #endregion
 
+    #region Animation Control Callbacks
+    private void AnimateDuck()
+    {
+        if (duckAnimator == null || duckImage == null) return;
+        bool animationComplete = duckAnimator.Animate(out var frame);
+        duckImage.image = frame;
+
+        if (animationComplete)
+            EditorApplication.update -= AnimateDuck;
+    }
+
+    private void StartDuckAnimation(string animationName, int repeatCount)
+    {
+        if (duckAnimator != null)
+        {
+            duckAnimator.SetAnimation(animationName, repeatCount);
+            EditorApplication.update += AnimateDuck;
+        }
+    }
+    private void StopDuckAnimation()
+    {
+        EditorApplication.update -= AnimateDuck;
+    }
+
+    #endregion
+
+    
 }
 
 //references:
@@ -640,8 +741,3 @@ public class DuckEditorWindow : EditorWindow
 //[4] https://www.geeksforgeeks.org/c-sharp/what-is-regular-expression-in-c-sharp/
 
 //https://www.foundations.unity.com/components
-
-
-
-
-

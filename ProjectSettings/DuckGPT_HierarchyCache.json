@@ -1,6 +1,6 @@
 {
   "sceneName": "SampleScene",
-  "scenePath": "Assets/Scenes/SampleScene.unity",
+  "scenePath": "Assets/MyTestProject/Scenes/SampleScene.unity",
   "rootObjects": [
     {
       "name": "Main Camera",
@@ -15,7 +15,7 @@
         "UniversalAdditionalCameraData (enabled=True)"
       ],
       "children": [],
-      "lastModified": 1764543219756
+      "lastModified": 1766929652107
     },
     {
       "name": "Directional Light",
@@ -39,10 +39,10 @@
             "Transform"
           ],
           "children": [],
-          "lastModified": 1764543219756
+          "lastModified": 1766929652107
         }
       ],
-      "lastModified": 1764543219756
+      "lastModified": 1766929652107
     },
     {
       "name": "Global Volume",
@@ -55,7 +55,7 @@
         "Volume (enabled=True)"
       ],
       "children": [],
-      "lastModified": 1764543219756
+      "lastModified": 1766929652107
     },
     {
       "name": "EventSystem",
@@ -69,7 +69,7 @@
         "InputSystemUIInputModule (enabled=True)"
       ],
       "children": [],
-      "lastModified": 1764543219756
+      "lastModified": 1766929652107
     },
     {
       "name": "duck",
@@ -80,7 +80,7 @@
       "components": [
         "Transform",
         "SpriteRenderer (enabled=True)",
-        "Animator (enabled=False)",
+        "Animator (enabled=True)",
         "Rigidbody2D",
         "test (enabled=True)"
       ],
@@ -105,13 +105,13 @@
                 "Transform"
               ],
               "children": [],
-              "lastModified": 1764543219756
+              "lastModified": 1766929652107
             }
           ],
-          "lastModified": 1764543219756
+          "lastModified": 1766929652107
         }
       ],
-      "lastModified": 1764543219756
+      "lastModified": 1766929652107
     },
     {
       "name": "Sphere",
@@ -126,22 +126,9 @@
         "SphereCollider"
       ],
       "children": [],
-      "lastModified": 1764543219756
-    },
-    {
-      "name": "h",
-      "activeSelf": true,
-      "activeInHierarchy": true,
-      "tag": "Untagged",
-      "layer": "Default",
-      "components": [
-        "Transform",
-        "Rigidbody"
-      ],
-      "children": [],
-      "lastModified": 1764543219756
+      "lastModified": 1766929652107
     }
   ],
-  "lastCacheTime": 1764543219756,
-  "hierarchyHash": "-147116763"
+  "lastCacheTime": 1766929652107,
+  "hierarchyHash": "857924029"
 }

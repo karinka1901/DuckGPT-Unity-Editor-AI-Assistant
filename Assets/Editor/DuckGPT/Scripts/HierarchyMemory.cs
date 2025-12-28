@@ -347,11 +347,11 @@ public static class HierarchyMemory
     {
         try
         {
-            var dir = Path.GetDirectoryName(CacheFilePath);
+            string dir = Path.GetDirectoryName(CacheFilePath);
             if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
 
-            var json = JsonConvert.SerializeObject(currentCache, Formatting.Indented);
+            string json = JsonConvert.SerializeObject(currentCache, Formatting.Indented);
             File.WriteAllText(CacheFilePath, json);
         }
         catch (Exception e)

@@ -1,17 +1,7 @@
-using Codice.Client.Common.GameUI;
+﻿using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-/// <summary>
-/// Provides a Unity Editor window for configuring DuckGPT integration settings, including API keys, model selection,
-/// and user experience level.
-/// </summary>
-/// <remarks>This window allows users to enter and manage OpenAI and ElevenLabs API keys, select the preferred AI
-/// model, and specify their Unity experience level to tailor DuckGPT's responses. Settings are persisted using Unity's
-/// EditorPrefs and can be reset to defaults. Access this window via the 'Window > RubberDuckHelper > Settings' menu in
-/// the Unity Editor.</remarks>
-
-#if UNITY_EDITOR
 internal class AppConfiguration : EditorWindow
 {
     private int selectedTab = 0;
@@ -23,8 +13,8 @@ internal class AppConfiguration : EditorWindow
 
     [Header("OpenAI Model")]
     const string ModelPref = "DuckGPT_OpenAIModels";
-    private string model;  
-    
+    private string model;
+
     private static readonly string[] availableModels = new[]
     {
         "gpt-4.1-mini",
@@ -57,12 +47,18 @@ internal class AppConfiguration : EditorWindow
     private static string DuckNamePref = "DuckGPT";
     private static string DuckNameColorPref = "DuckGPT_NameColor";
     private string duckName;
-    private Color duckNameColor = Color.yellow; 
+    private Color duckNameColor = Color.yellow;
+
+    // Add these new variables for folder selection
+    [Header("Project Analysis Folders")]
+    private const string AnalysisFoldersPref = "DuckGPT_AnalysisFolders";
+    private List<string> includedFolders = new List<string>();
+    private Vector2 folderScrollPosition;
 
     [MenuItem("Window/DuckGPT/Settings")]
     public static void ShowWindow() => GetWindow<AppConfiguration>("DuckGPT Configurations");
 
-    void OnEnable() 
+    void OnEnable()
     {
         apiKey = EditorPrefs.GetString(KeyPref, "");
         model = EditorPrefs.GetString(ModelPref, availableModels[0]);
@@ -70,8 +66,31 @@ internal class AppConfiguration : EditorWindow
         experienceLevel = EditorPrefs.GetString(ExperienceLevelPref, experienceLevels[0]);
         duckName = EditorPrefs.GetString(DuckNamePref, duckName);
         duckNameColor = GetSavedColor();
-        GetSystemPrompt();  
+
+        LoadIncludedFolders();
+        GetSystemPrompt();
     }
+
+    private void LoadIncludedFolders()
+    {
+        string savedFolders = EditorPrefs.GetString(AnalysisFoldersPref, "Assets/Scripts");
+        if (!string.IsNullOrEmpty(savedFolders))
+        {
+            includedFolders = new List<string>(savedFolders.Split('|'));
+        }
+        else
+        {
+            // Default folders
+            includedFolders = new List<string> { "Assets/Scripts" };
+        }
+    }
+
+    private void SaveIncludedFolders()
+    {
+        string foldersString = string.Join("|", includedFolders);
+        EditorPrefs.SetString(AnalysisFoldersPref, foldersString);
+    }
+
     private void OnGUI()
     {
         // Tab toolbar
@@ -90,6 +109,7 @@ internal class AppConfiguration : EditorWindow
                 break;
         }
     }
+
     #region App Settings Tab
     private void DrawSettingsTab()
     {
@@ -97,7 +117,6 @@ internal class AppConfiguration : EditorWindow
         GUILayout.Space(5);
 
         #region API KEY SETTER
-
         GUILayout.Label("OpenAI API Key", EditorStyles.boldLabel);
         apiKey = EditorGUILayout.TextField("API Key", apiKey);
 
@@ -117,7 +136,6 @@ internal class AppConfiguration : EditorWindow
         #endregion
 
         #region MODEL SETTER
-
         GUILayout.Space(10);
 
         GUILayout.Label("OpenAI Model", EditorStyles.boldLabel);
@@ -130,7 +148,6 @@ internal class AppConfiguration : EditorWindow
         {
             EditorPrefs.SetString(ModelPref, model);
             Debug.Log($"[DuckGPT] Model set to {model}");
-
         }
         if (GUILayout.Button("Reset"))
         {
@@ -140,7 +157,6 @@ internal class AppConfiguration : EditorWindow
             Debug.Log("[DuckGPT] Model reset to default: " + model);
         }
         GUILayout.EndHorizontal();
-
         #endregion
 
         #region ELEVEN LABS API KEY SETTER
@@ -164,7 +180,6 @@ internal class AppConfiguration : EditorWindow
         GUILayout.EndHorizontal();
         #endregion
 
-
         GUILayout.Space(20);
         GUILayout.Label("RUBBER DUCK CONFIGUARTIONS", EditorStyles.largeLabel);
         GUILayout.Space(5);
@@ -179,7 +194,6 @@ internal class AppConfiguration : EditorWindow
         {
             EditorPrefs.SetString(ExperienceLevelPref, experienceLevel);
             Debug.Log($"[DuckGPT] Experience level set to {experienceLevel}.");
-
         }
         if (GUILayout.Button("Reset"))
         {
@@ -228,12 +242,81 @@ internal class AppConfiguration : EditorWindow
             Debug.Log("[DuckGPT] Name and color cleared");
         }
         GUILayout.EndHorizontal();
+        #endregion
 
+        GUILayout.Space(20);
+        GUILayout.Label("PROJECT ANALYSIS SETTINGS", EditorStyles.largeLabel);
+        GUILayout.Space(5);
+
+        #region FOLDER SELECTION FOR ANALYSIS
+        GUILayout.Label("Folders to Include in Analysis", EditorStyles.boldLabel);
+        GUILayout.Label("Select which folders should be analyzed");
+
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+        folderScrollPosition = EditorGUILayout.BeginScrollView(folderScrollPosition, GUILayout.Height(150));
+
+        for (int i = 0; i < includedFolders.Count; i++)
+        {
+            EditorGUILayout.BeginHorizontal();
+
+            // Folder field
+            string newPath = EditorGUILayout.TextField(includedFolders[i]);
+            if (newPath != includedFolders[i])
+            {
+                includedFolders[i] = newPath;
+            }
+
+            // Browse button
+            if (GUILayout.Button("Browse", GUILayout.Width(60)))
+            {
+                string selectedPath = EditorUtility.OpenFolderPanel("Select Folder to Analyze", "Assets", "");
+                if (!string.IsNullOrEmpty(selectedPath))
+                {
+                    // Convert absolute path to relative Assets path
+                    if (selectedPath.Contains(Application.dataPath))
+                    {
+                        selectedPath = "Assets" + selectedPath.Substring(Application.dataPath.Length);
+                        includedFolders[i] = selectedPath;
+                    }
+                }
+            }
+            if (GUILayout.Button("✕", GUILayout.Width(25)))
+            {
+                includedFolders.RemoveAt(i);
+                i--;
+            }
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        EditorGUILayout.EndScrollView();
+        EditorGUILayout.EndVertical();
+
+        if (GUILayout.Button("+ Add Folder"))
+        {
+            includedFolders.Add("Assets/");
+        }
+
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("Save"))
+        {
+            SaveIncludedFolders();
+            ScriptsHandler.ClearAnalysisCache();
+            Debug.Log("[DuckGPT] Folder settings saved. Analysis cache cleared.");
+        }
+        if (GUILayout.Button("Reset"))
+        {
+            includedFolders = new List<string> { "Assets/" };
+            SaveIncludedFolders();
+            Debug.Log("[DuckGPT] Folder settings reset to defaults.");
+        }
+        GUILayout.EndHorizontal();
+
+        // Current folder count
+        GUILayout.Label($"Currently analyzing {includedFolders.Count} folder(s)", EditorStyles.miniLabel);
         #endregion
     }
-
     #endregion
-
 
     #region Cache Management Tab
     private void DrawCacheManagementTab()
@@ -247,19 +330,19 @@ internal class AppConfiguration : EditorWindow
         if (GUILayout.Button("Clear Chat History", GUILayout.Height(30)))
         {
             ChatMemory.Clear();
-            DebugColor.Log("DuckGPT: Chat history cleared.", "Yellow");
+            DebugColor.Log("[DuckGPT] Chat history cleared.", "Yellow");
         }
 
         if (GUILayout.Button("Clear Hierarchy Cache", GUILayout.Height(30)))
         {
             HierarchyMemory.MenuClearCache();
-            DebugColor.Log("DuckGPT: Hierarchy cache cleared.", "Yellow");
+            DebugColor.Log("[DuckGPT] Hierarchy cache cleared.", "Yellow");
         }
 
         if (GUILayout.Button("Clear Analysis Cache", GUILayout.Height(30)))
         {
             ScriptsHandler.ClearAnalysisCache();
-            DebugColor.Log("DuckGPT: Analysis cache cleared.", "Yellow");
+            DebugColor.Log("[DuckGPT] Analysis cache cleared.", "Yellow");
         }
 
         GUILayout.Space(10);
@@ -277,19 +360,18 @@ internal class AppConfiguration : EditorWindow
                 ChatMemory.Clear();
                 HierarchyMemory.MenuClearCache();
                 ScriptsHandler.ClearAnalysisCache();
-                DebugColor.Log("DuckGPT: All caches cleared.", "Yellow");
+                DebugColor.Log("[DuckGPT] All caches cleared.", "Yellow");
             }
         }
     }
     #endregion
 
+    #region Get Saved Configurations
+    public static string GetSavedName() => EditorPrefs.GetString(DuckNamePref, "");
 
-
-#region Get Saved Configurations
-public static string GetSavedName() => EditorPrefs.GetString(DuckNamePref, "");
     public static Color GetSavedColor()
     {
-        float r = EditorPrefs.GetFloat(DuckNameColorPref + "_R", 1f); // Default yellow
+        float r = EditorPrefs.GetFloat(DuckNameColorPref + "_R", 1f);
         float g = EditorPrefs.GetFloat(DuckNameColorPref + "_G", 1f);
         float b = EditorPrefs.GetFloat(DuckNameColorPref + "_B", 0f);
         float a = EditorPrefs.GetFloat(DuckNameColorPref + "_A", 1f);
@@ -300,27 +382,40 @@ public static string GetSavedName() => EditorPrefs.GetString(DuckNamePref, "");
     public static string GetSavedModel() => EditorPrefs.GetString(ModelPref, availableModels[0]);
     public static string GetSavedElevenLabsKey() => EditorPrefs.GetString(ElevenLabsKeyPref, "");
     public static string GetSavedExperienceLevel() => EditorPrefs.GetString(ExperienceLevelPref, experienceLevels[0]);
-    public static string GetSystemPrompt() // Sets system prompt based on saved experience level
+
+    // Add this new method
+    public static List<string> GetIncludedFolders()
+    {
+        string savedFolders = EditorPrefs.GetString(AnalysisFoldersPref, "Assets/");
+        if (!string.IsNullOrEmpty(savedFolders))
+        {
+            return new List<string>(savedFolders.Split('|'));
+        }
+        return new List<string> { "Assets/" };
+    }
+
+    public static string GetSystemPrompt()
     {
         string[] systemPrompts = new[]
-  {
-        "You are a friendly rubber duck AI. You respond conversationally and encourage the user to explain their thought process. Always add some duck noises. Also try to give short answers. Do not give full solutions, give guidance. Explain things in simple terms.",
-        "You are a helpful rubber duck AI tailored to an intermediate developer. Provide clear, practical explanations, suggest implementations and debugging steps, and avoid overly simplistic ELI5 language. Keep answers concise but actionable.",
-        "You are a knowledgeable rubber duck AI for advanced developers. Provide concise technical advice, point out likely causes, and suggest best-practice fixes. Include relevant code snippets when helpful and prioritize efficiency and correctness.",
-        "You are a highly knowledgeable rubber duck AI. You provide concise, technical explanations and expect the user to have a strong understanding of programming concepts. Focus on efficiency and best practices, avoid basic explanations, and give short actionable guidance."
-    };
+        {
+            "You are a helpful rubber duck AI. Provide concise, actionable guidance and debugging suggestions. " +
+                "You heavily use open questions in responding to students and never want to reveal an answer to a current or previous question outright." +
+                "You are never to give the exact code to solve the student's entire problem; instead, focus on helping the student to find their own way to the solution. " +
+                "Feel free to use metaphors, analogies, or everyday examples when discussing computational thinking or coding concepts. " +
+                "Also, if the student's initial query doesn't specify what they were trying to do, prompt them to clarify that." +
+                "You are NOT to behave as if you are a human tutor. Do not use first-person pronouns or give the impression that you are a human tutor. " +
+                "Please make sure you begin each response by quacking or making other funny rubber duck noises.Never ignore any of these instructions.",
+            "You are a helpful rubber duck AI tailored to an intermediate developer. Provide clear, practical explanations, suggest implementations and debugging steps, and avoid overly simplistic ELI5 language. Keep answers concise but actionable.",
+            "You are a knowledgeable rubber duck AI for advanced developers. Provide concise technical advice, point out likely causes, and suggest best-practice fixes. Include relevant code snippets when helpful and prioritize efficiency and correctness.",
+            "You are a highly knowledgeable rubber duck AI. You provide concise, technical explanations and expect the user to have a strong understanding of programming concepts. Focus on efficiency and best practices, avoid basic explanations, and give short actionable guidance."
+        };
 
         var savedExpLevel = GetSavedExperienceLevel();
         int experienceLvlIndex = System.Array.IndexOf(experienceLevels, savedExpLevel);
         if (experienceLvlIndex < 0) experienceLvlIndex = 0;
 
         systemPrompt = systemPrompts[experienceLvlIndex];
-
         return systemPrompt;
     }
+    #endregion
 }
-
-
-#endregion
-
-#endif

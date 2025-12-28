@@ -2,34 +2,22 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-/// <summary>
-///  to do: add speed control
-/// </summary>
 public class DuckCustomAnimator
 {
     private Dictionary<string, List<Texture2D>> animations = new();
+
     private string currentAnimation = null;
     private int currentFrame = 0;
+
     private float frameTime;
     private double lastFrameTime;
 
     public bool isAnimating = false;
-    public bool finished = false;
+    public bool animationFinished = false;
 
     private int playCount = 1;
     private int playCounter = 0;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DuckCustomAnimator"/> class with the specified animation
-    /// definitions and frame time.
-    /// </summary>
-    /// <remarks>This constructor loads the animation frames from the specified paths and initializes the
-    /// animator with the first animation in the dictionary, if any animations are provided. If no animations are
-    /// defined, the animator will remain uninitialized.</remarks>
-    /// <param name="animationDefs">A dictionary where each key represents the name of an animation, and the value is a tuple containing the path to
-    /// the animation frames and the total number of frames in the animation. The path should point to a directory
-    /// containing the animation frames as PNG files.</param>
-    /// <param name="frameTime">The duration, in seconds, that each frame of the animation is displayed. The default value is 0.15 seconds.</param>
     public DuckCustomAnimator(Dictionary<string, (string path, int frameCount)> animationDefs, float frameTime = 0.15f)
     {
         foreach (var kvp in animationDefs)
@@ -37,28 +25,35 @@ public class DuckCustomAnimator
             var frames = new List<Texture2D>();
             for (int i = 0; i < kvp.Value.frameCount; i++)
             {
-                var tex = AssetDatabase.LoadAssetAtPath<Texture2D>($"{kvp.Value.path}/duck_{i}.png");
-                if (tex != null)
-                    frames.Add(tex);
+                var frame = AssetDatabase.LoadAssetAtPath<Texture2D>($"{kvp.Value.path}/duck_{i}.png");
+                if (frame != null)
+                    frames.Add(frame);
             }
             animations[kvp.Key] = frames;
         }
         this.frameTime = frameTime;
-        finished = false;
-        currentAnimation = animations.Count > 0 ? new List<string>(animations.Keys)[0] : null;
+
+        animationFinished = false;
+
+        if (animations.Count > 0) currentAnimation = new List<string>(animations.Keys)[0];
+        else currentAnimation = null;
+
         currentFrame = 0;
-        lastFrameTime = EditorApplication.timeSinceStartup;
+
+        lastFrameTime = EditorApplication.timeSinceStartup; // Initialize lastFrameTime
     }
 
     public void SetAnimation(string name, int playTimes = 1)
     {
         if (!animations.ContainsKey(name)) return;
+
         currentAnimation = name;
         playCount = Mathf.Max(1, playTimes);
         playCounter = 0;
         currentFrame = 0;
         isAnimating = true;
-        finished = false;
+        animationFinished = false;
+
         lastFrameTime = EditorApplication.timeSinceStartup;
     }
 
@@ -71,7 +66,7 @@ public class DuckCustomAnimator
 
     public void UpdateFrame()
     {
-        if (!isAnimating || finished || currentAnimation == null || !animations.ContainsKey(currentAnimation)) return;
+        if (!isAnimating || animationFinished || currentAnimation == null || !animations.ContainsKey(currentAnimation)) return;
         var frames = animations[currentAnimation];
         if (frames.Count == 0) return;
 
@@ -91,7 +86,7 @@ public class DuckCustomAnimator
                 else
                 {
                     currentFrame = 0;
-                    finished = true;
+                    animationFinished = true;
                     isAnimating = false;
                 }
             }
@@ -102,16 +97,15 @@ public class DuckCustomAnimator
     {
         UpdateFrame();
         frame = GetCurrentFrame();
-        return finished;
+        return animationFinished;
     }
 
     public static Dictionary<string, (string, int)> GetAllAnimations()
     {
         return new Dictionary<string, (string, int)>
-        {
-            
+        {        
             { "confuse",("Assets/Editor/DuckGPT/Animations/duck_confused", 8)},
-            { "talk", ("Assets/Editor/DuckGPT/Animations/duck_talk", 4) },
+            { "talk", ("Assets/Editor/DuckGPT/Animations/duck_talk", 5) },
             { "squeeze", ("Assets/Editor/DuckGPT/Animations/duck_sqeeze", 4)},
             { "read", ("Assets/Editor/DuckGPT/Animations/duck_reading", 9) },
             { "mute", ("Assets/Editor/DuckGPT/Animations/duck_micOff", 7) },
@@ -119,11 +113,8 @@ public class DuckCustomAnimator
             { "scan", ("Assets/Editor/DuckGPT/Animations/duck_scan", 14) },
             { "micOn", ("Assets/Editor/DuckGPT/Animations/duck_micOn", 11) },
             { "micOff", ("Assets/Editor/DuckGPT/Animations/duck_micOff", 8) },
-
-
-
-
-
+            { "micDrop", ("Assets/Editor/DuckGPT/Animations/duck_dropMic", 10) },
+            { "thinking", ("Assets/Editor/DuckGPT/Animations/duck_thinking", 8) },
         };
     }
 }
