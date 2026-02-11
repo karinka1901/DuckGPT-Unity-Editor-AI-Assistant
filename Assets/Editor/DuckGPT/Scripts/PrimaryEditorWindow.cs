@@ -4,10 +4,10 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public class DuckEditorWindow : EditorWindow
+public class PrimaryEditorWindow : EditorWindow
 {
     [MenuItem("Window/DuckGPT/Launch")]
-    public static void ShowWindow() => GetWindow<DuckEditorWindow>("DuckGPT");
+    public static void ShowWindow() => GetWindow<PrimaryEditorWindow>("DuckGPT");
 
     #region "Duck Viariables"
     private Image duckImage;
@@ -109,7 +109,7 @@ public class DuckEditorWindow : EditorWindow
         minSize = new Vector2(534, 700);
 
         //Stylesheet
-        StyleSheet styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/Editor/DuckGPT/Scripts/DuckHelperStyleSheet.uss");
+        StyleSheet styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/Editor/DuckGPT/Scripts/PrimaryWindowStyleSheet.uss");
         if (styleSheet != null) root.styleSheets.Add(styleSheet);
 
         // Window background

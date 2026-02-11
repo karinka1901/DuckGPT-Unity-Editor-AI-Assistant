@@ -1,0 +1,101 @@
+#TabContainer {
+    flex-direction: row;
+    justify-content: flex-start;
+    margin-bottom: 4px;
+}
+
+.tab-container {
+    flex-direction: row;
+    justify-content: center;
+    align-items: stretch;
+    width: 100%;
+}
+
+/* Make the two tab buttons share the width */
+#SettingsTabButton,
+#CacheTabButton {
+    width: 50%;
+    height: 24px;
+    margin: 0;
+    border-radius: 0;
+}
+
+/* Base tab appearance */
+.tab-button {
+    flex-grow: 0;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 0px;
+
+    border-left-color: #555555;
+    border-right-color: #555555;
+    border-top-color: #555555;
+
+    background-color: #2d2d2d;
+    color: #d0d0d0;
+
+    margin-right: 2px;
+
+    /* Flatten bottom border so it connects with the panel */
+    border-bottom-width: 0;
+    border-bottom-color: transparent;
+
+    /* Slightly smaller font than main window if you like */
+    font-size: 13px;
+
+    /* Remove extra margins from .custom-button */
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* Hover state */
+.tab-button:hover {
+    background-color: #383838;
+}
+
+/* Selected tab “in line” with content */
+.tab-button.active-tab {
+    background-color: #3b7ab8;
+    color: #ffffff;
+    border-left-color: #3b7ab8;
+    border-right-color: #3b7ab8;
+    border-top-color: #3b7ab8;
+
+    /* Active tab: pressed look (reuse .custom-button:active style) */
+    background-color: rgb(104, 104, 104);
+    border-bottom-color: rgb(223, 223, 223);
+    border-left-color: rgb(64, 64, 64);
+    border-right-color: rgb(223, 223, 223);
+    border-top-color: rgb(64, 64, 64);
+}
+
+/* Optional: inactive tab a bit lighter */
+.tab-button:not(.active-tab) {
+    background-color: rgb(153, 153, 153);
+}
+
+/* Panels under the tabs: same border as Primary window content area */
+#SettingsTab,
+#CacheManagementTab {
+    border-top-width: 1px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+
+    border-top-color: rgb(204, 204, 204);
+    border-left-color: rgb(190, 190, 190);
+    border-right-color: black;
+    border-bottom-color: rgb(36, 36, 36);
+
+    padding: 8px;
+    background-color: rgb(128, 128, 128);
+}

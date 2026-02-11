@@ -1,9 +1,14 @@
 ﻿using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.UIElements;
+using System.Linq;
+using System.ComponentModel;
 
 internal class AppConfiguration : EditorWindow
 {
+    #region Variables
     private int selectedTab = 0;
     private readonly string[] tabNames = { "Settings", "Cache Management" };
 
@@ -55,6 +60,8 @@ internal class AppConfiguration : EditorWindow
     private List<string> includedFolders = new List<string>();
     private Vector2 folderScrollPosition;
 
+    #endregion
+
     [MenuItem("Window/DuckGPT/Settings")]
     public static void ShowWindow() => GetWindow<AppConfiguration>("DuckGPT Configurations");
 
@@ -91,280 +98,573 @@ internal class AppConfiguration : EditorWindow
         EditorPrefs.SetString(AnalysisFoldersPref, foldersString);
     }
 
-    private void OnGUI()
+    private VisualElement folderListContainer;
+
+    public void CreateGUI()
     {
-        // Tab toolbar
-        selectedTab = GUILayout.Toolbar(selectedTab, tabNames, GUILayout.Height(30));
+        var root = rootVisualElement;
+        root.AddToClassList("config-root");
 
-        GUILayout.Space(10);
+        root.Clear();
 
-        // Display content based on selected tab
-        switch (selectedTab)
+        StyleSheet styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(
+            "Assets/Editor/DuckGPT/Scripts/ConfigurationsWindowStyleSheet.uss");
+        if (styleSheet != null) root.styleSheets.Add(styleSheet);
+
+
+        #region Tab Buttons and Containers
+        VisualElement tabContainer = new()
         {
-            case 0:
-                DrawSettingsTab();
-                break;
-            case 1:
-                DrawCacheManagementTab();
-                break;
-        }
-    }
+            name = "TabContainer"
+        };
+        tabContainer.AddToClassList("tab-container");
 
-    #region App Settings Tab
-    private void DrawSettingsTab()
-    {
-        GUILayout.Label("AI CONFIGUARTIONS", EditorStyles.largeLabel);
-        GUILayout.Space(5);
-
-        #region API KEY SETTER
-        GUILayout.Label("OpenAI API Key", EditorStyles.boldLabel);
-        apiKey = EditorGUILayout.TextField("API Key", apiKey);
-
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Save"))
+        VisualElement settingsTab = new()
         {
-            EditorPrefs.SetString(KeyPref, apiKey.Trim());
-            Debug.Log("[DuckGPT] API Key saved");
-        }
-        if (GUILayout.Button("Clear"))
+            name = "SettingsTab"
+        };
+        VisualElement cacheManagementTab = new()
+        {
+            name = "CacheManagementTab"
+        };
+        cacheManagementTab.style.display = DisplayStyle.None;
+
+        Button settingsTabButton = new(() =>
+        {
+            settingsTab.style.display = DisplayStyle.Flex;
+            cacheManagementTab.style.display = DisplayStyle.None;
+       
+        })
+        {
+            text = "App Settings",
+            name = "SettingsTabButton"
+        };
+        settingsTabButton.AddToClassList("tab-button");
+        settingsTabButton.AddToClassList("custom-button");  
+
+        Button cacheManagementTabButton = new(() =>
+        {
+            settingsTab.style.display = DisplayStyle.None;
+            cacheManagementTab.style.display = DisplayStyle.Flex;
+      
+        })
+        {
+            text = "Cache Management",
+            name = "CacheTabButton"
+        };
+        cacheManagementTabButton.AddToClassList("tab-button");
+        cacheManagementTabButton.AddToClassList("custom-button"); 
+
+        tabContainer.Add(settingsTabButton);
+        tabContainer.Add(cacheManagementTabButton);
+
+        root.Add(tabContainer);
+        root.Add(settingsTab);
+        root.Add(cacheManagementTab);
+        #endregion
+
+        #region AI Configurations
+
+        #region OpenAI
+
+        VisualElement aiConfig = new()
+        {
+            name = "AIConfig"
+        };
+        Label aiConfigLabel = new("AI CONFIGURATIONS")
+        {
+            name = "SectionLabel"
+        };
+
+        VisualElement openAIConfigContainer = new()
+        {
+            name = "OpenAIConfigContainer"
+        };
+        openAIConfigContainer.AddToClassList("openai-config-container");
+
+        Label apiKeyLabel = new("OpenAI API Key:");
+        apiKeyLabel.AddToClassList("api-key-label");
+
+        TextField apiKeyField = new()
+        {
+            value = apiKey
+        };
+        apiKeyField.AddToClassList("api-key-field");
+
+        openAIConfigContainer.Add(apiKeyLabel);
+        openAIConfigContainer.Add(apiKeyField);
+
+        VisualElement buttonsContainer = new()
+        {
+            name = "ButtonsContainer",
+        };
+        buttonsContainer.AddToClassList("buttons-container");
+        Button saveApiKeyButton = new(() =>
+        {
+            EditorPrefs.SetString(KeyPref, apiKeyField.value.Trim());
+            DebugColor.Log("[DuckGPT] API Key saved", "yellow");
+        })
+        {
+            text = "Save"
+        };
+        saveApiKeyButton.AddToClassList("settings-button");
+        saveApiKeyButton.AddToClassList("custom-button");
+
+        Button clearApiKeyButton = new (() =>
         {
             EditorPrefs.DeleteKey(KeyPref);
-            apiKey = "";
-            Debug.Log("[DuckGPT] API Key cleared");
-        }
-        GUILayout.EndHorizontal();
-        #endregion
-
-        #region MODEL SETTER
-        GUILayout.Space(10);
-
-        GUILayout.Label("OpenAI Model", EditorStyles.boldLabel);
-
-        selectedModelIndex = EditorGUILayout.Popup("Model", selectedModelIndex, availableModels);
-        model = availableModels[selectedModelIndex];
-
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Save"))
+            apiKeyField.value = "";
+            DebugColor.Log("[DuckGPT] API Key cleared", "blue");
+        })
         {
-            EditorPrefs.SetString(ModelPref, model);
-            Debug.Log($"[DuckGPT] Model set to {model}");
-        }
-        if (GUILayout.Button("Reset"))
+            text = "Clear"
+        };
+        clearApiKeyButton.AddToClassList("settings-button");
+        clearApiKeyButton.AddToClassList("custom-button");
+        buttonsContainer.Add(saveApiKeyButton);
+        buttonsContainer.Add(clearApiKeyButton);
+
+        VisualElement modelTypeContainer = new(){
+            name = "ModelButtonsContainer",
+        };
+        modelTypeContainer.AddToClassList("openai-config-container");
+
+        Label modelLabel = new("OpenAI Model:");
+        modelLabel.AddToClassList("model-label");
+
+        PopupField<string> modelPopup = new(
+            new List<string>(availableModels),
+            model
+        )
+        {
+            value = model
+        };
+        modelPopup.AddToClassList("field");
+
+        VisualElement modelButtonsContainer = new()
+        {
+            name = "ModelButtonsContainer",
+        };
+        modelButtonsContainer.AddToClassList("buttons-container");
+        modelTypeContainer.Add(modelLabel);
+        modelTypeContainer.Add(modelPopup);
+
+        Button saveModelButton = new(() =>
+        {
+            EditorPrefs.SetString(ModelPref, modelPopup.value);
+            DebugColor.Log($"[DuckGPT] Model set to {modelPopup.value}", "yellow");
+        })
+        {
+            text = "Save"
+        };
+        saveModelButton.AddToClassList("settings-button");
+        saveModelButton.AddToClassList("custom-button");
+
+        Button resetModelButton = new(() =>
         {
             EditorPrefs.DeleteKey(ModelPref);
-            model = availableModels[0];
-            selectedModelIndex = 0;
-            Debug.Log("[DuckGPT] Model reset to default: " + model);
-        }
-        GUILayout.EndHorizontal();
+            modelPopup.value = availableModels[0];
+            DebugColor.Log("[DuckGPT] Model reset to default: " + modelPopup.value, "blue");
+        })
+        {
+            text = "Reset"
+        };
+        resetModelButton.AddToClassList("settings-button");
+        resetModelButton.AddToClassList("custom-button");
+        modelButtonsContainer.Add(saveModelButton);
+        modelButtonsContainer.Add(resetModelButton);
+
         #endregion
 
-        #region ELEVEN LABS API KEY SETTER
-        GUILayout.Space(10);
+        #region Elevent Labs
+        Label elevenLabsKeyLabel = new("Eleven Labs API Key:");
 
-        GUILayout.Label("Eleven Labs API Key", EditorStyles.boldLabel);
-
-        elevenLabsApiKey = EditorGUILayout.TextField("Eleven Labs API Key", elevenLabsApiKey);
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Save"))
+        TextField elevenLabsKeyField = new()
         {
-            EditorPrefs.SetString(ElevenLabsKeyPref, elevenLabsApiKey.Trim());
-            Debug.Log("[DuckGPT] Eleven Labs API Key saved");
-        }
-        if (GUILayout.Button("Clear"))
+            value = elevenLabsApiKey
+        };
+
+        VisualElement elevenLabsButtonsContainer = new()
+        {
+            name = "ElevenLabsButtonsContainer",
+        };
+        elevenLabsButtonsContainer.AddToClassList("buttons-container");
+
+        Button saveElevenLabsKeyButton = new(() =>
+        {
+            EditorPrefs.SetString(ElevenLabsKeyPref, elevenLabsKeyField.value.Trim());
+            DebugColor.Log("[DuckGPT] Eleven Labs API Key saved", "yellow");
+        })
+        {
+            text = "Save"
+        };
+        saveElevenLabsKeyButton.AddToClassList("settings-button");
+        saveElevenLabsKeyButton.AddToClassList("custom-button");
+
+        Button clearElevenLabsKeyButton = new (() =>
         {
             EditorPrefs.DeleteKey(ElevenLabsKeyPref);
-            Debug.Log("[DuckGPT] Eleven Labs API Key cleared");
-            elevenLabsApiKey = "";
-        }
-        GUILayout.EndHorizontal();
+            elevenLabsKeyField.value = "";
+            DebugColor.Log("[DuckGPT] Eleven Labs API Key cleared", "blue");
+        })
+        {
+            text = "Clear"
+        };
+
+        elevenLabsButtonsContainer.Add(saveElevenLabsKeyButton);
+        elevenLabsButtonsContainer.Add(clearElevenLabsKeyButton);
+
+        clearElevenLabsKeyButton.AddToClassList("settings-button");
+        clearElevenLabsKeyButton.AddToClassList("custom-button");
+
         #endregion
 
-        GUILayout.Space(20);
-        GUILayout.Label("RUBBER DUCK CONFIGUARTIONS", EditorStyles.largeLabel);
-        GUILayout.Space(5);
+        aiConfig.Add(aiConfigLabel);
+        aiConfig.Add(openAIConfigContainer);
+        aiConfig.Add(buttonsContainer);
 
-        #region EXPERIENCE LEVEL SETTER
-        GUILayout.Label("Unity Experience Level", EditorStyles.boldLabel);
-        GUILayout.Label("Customize DuckGPT's responses for your experience level.");
-        selectedExperienceLevelIndex = EditorGUILayout.Popup("Experience Level", selectedExperienceLevelIndex, experienceLevels);
-        experienceLevel = experienceLevels[selectedExperienceLevelIndex];
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Save"))
+        aiConfig.Add(modelTypeContainer);
+        aiConfig.Add(modelButtonsContainer);
+
+        aiConfig.Add(elevenLabsKeyLabel);
+        aiConfig.Add(elevenLabsKeyField);
+        aiConfig.Add(elevenLabsButtonsContainer);
+
+
+
+        #endregion
+
+        #region Rubber Duck Configurations
+
+        VisualElement duckConfig = new()
         {
-            EditorPrefs.SetString(ExperienceLevelPref, experienceLevel);
-            Debug.Log($"[DuckGPT] Experience level set to {experienceLevel}.");
-        }
-        if (GUILayout.Button("Reset"))
+            name = "DuckConfig"
+        };
+        Label duckConfigLabel = new("RUBBER DUCK CONFIGURATIONS")
+        {
+            name = "SectionLabel"
+        };
+        Label experienceLevelLabel = new("Unity Experience Level:");
+        PopupField<string> experienceLevelPopup = new(
+            new List<string>(experienceLevels),
+            experienceLevel
+        )
+        {
+            value = experienceLevel
+        };
+
+        VisualElement experienceLevelButtonsContainer = new()
+        {
+            name = "ExperienceLevelButtonsContainer",
+        };
+        experienceLevelButtonsContainer.AddToClassList("buttons-container");
+
+        Button saveExperienceLevelButton = new(() =>
+        {
+            EditorPrefs.SetString(ExperienceLevelPref, experienceLevelPopup.value);
+            GetSystemPrompt();
+            DebugColor.Log($"[DuckGPT] Experience level set to {experienceLevelPopup.value}.", "yellow");
+        })
+        {
+            text = "Save"
+        };
+        saveExperienceLevelButton.AddToClassList("settings-button");
+        saveExperienceLevelButton.AddToClassList("custom-button");
+
+        Button resetExperienceLevelButton = new(() =>
         {
             EditorPrefs.DeleteKey(ExperienceLevelPref);
-            experienceLevel = experienceLevels[0];
-            selectedExperienceLevelIndex = 0;
-            Debug.Log("[DuckGPT] Experience level reset to default: " + experienceLevel);
-        }
-        GUILayout.EndHorizontal();
-        #endregion
-
-        #region Rubber Duck Name
-        GUILayout.Space(10);
-
-        GUILayout.Label("Rubber Duck Name", EditorStyles.boldLabel);
-        GUILayout.Label("Name your rubber duck");
-
-        duckName = EditorGUILayout.TextField("Name", duckName);
-        duckNameColor = EditorGUILayout.ColorField("Name Color", duckNameColor);
-
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Save"))
+            experienceLevelPopup.value = experienceLevels[0];
+            GetSystemPrompt();
+            DebugColor.Log("[DuckGPT] Experience level reset to default: " + experienceLevelPopup.value, "blue");
+        })
         {
-            EditorPrefs.SetString(DuckNamePref, duckName.Trim());
+            text = "Reset"
+        };
+        resetExperienceLevelButton.AddToClassList("settings-button");
+        resetExperienceLevelButton.AddToClassList("custom-button");
 
+        experienceLevelButtonsContainer.Add(saveExperienceLevelButton);
+        experienceLevelButtonsContainer.Add(resetExperienceLevelButton);
+
+        Label duckAppearance = new("Duck Name and Accent Color:");
+
+        VisualElement duckNameContainer = new()
+        {
+            name = "DuckAppearanceContainer"
+        };
+        duckNameContainer.AddToClassList("duck-name-container");
+
+        Label duckNameLabel = new("Duck Name:");
+        duckNameLabel.AddToClassList("duck-name-label");
+
+        TextField duckNameField = new()
+        {
+            value = duckName
+        };
+        duckNameField.AddToClassList("duck-name-field");
+
+        duckNameContainer.Add(duckNameLabel);
+        duckNameContainer.Add(duckNameField);
+
+        ColorField duckNameColorField = new()
+        {
+            value = duckNameColor
+        };
+
+        VisualElement duckNameButtonsContainer = new()
+        {
+            name = "DuckNameButtonsContainer",
+        };
+        duckNameButtonsContainer.AddToClassList("buttons-container");
+
+        Button saveDuckNameButton = new(() =>
+        {
+            EditorPrefs.SetString(DuckNamePref, duckNameField.value.Trim());
             // Save color
-            EditorPrefs.SetFloat(DuckNameColorPref + "_R", duckNameColor.r);
-            EditorPrefs.SetFloat(DuckNameColorPref + "_G", duckNameColor.g);
-            EditorPrefs.SetFloat(DuckNameColorPref + "_B", duckNameColor.b);
-            EditorPrefs.SetFloat(DuckNameColorPref + "_A", duckNameColor.a);
+            EditorPrefs.SetFloat(DuckNameColorPref + "_R", duckNameColorField.value.r);
+            EditorPrefs.SetFloat(DuckNameColorPref + "_G", duckNameColorField.value.g);
+            EditorPrefs.SetFloat(DuckNameColorPref + "_B", duckNameColorField.value.b);
+            EditorPrefs.SetFloat(DuckNameColorPref + "_A", duckNameColorField.value.a);
+            GetWindow<PrimaryEditorWindow>().UpdateDuckName();
+            DebugColor.Log($"[DuckGPT] Name '{duckNameField.value}' and color saved", "yellow");
+        })
+        {
+            text = "Save"
+        };
+        saveDuckNameButton.AddToClassList("settings-button");
+        saveDuckNameButton.AddToClassList("custom-button");
 
-            GetWindow<DuckEditorWindow>().UpdateDuckName();
-            Debug.Log($"[DuckGPT] Name '{duckName}' and color saved");
-        }
-        if (GUILayout.Button("Clear"))
+        Button clearDuckNameButton = new(() =>
         {
             EditorPrefs.DeleteKey(DuckNamePref);
             EditorPrefs.DeleteKey(DuckNameColorPref + "_R");
             EditorPrefs.DeleteKey(DuckNameColorPref + "_G");
             EditorPrefs.DeleteKey(DuckNameColorPref + "_B");
             EditorPrefs.DeleteKey(DuckNameColorPref + "_A");
+            duckNameField.value = "";
+            duckNameColorField.value = Color.yellow;
+            GetWindow<PrimaryEditorWindow>().UpdateDuckName();
+            DebugColor.Log("[DuckGPT] Name and color cleared", "blue");
+        })
+        {
+            text = "Clear"
+        };
 
-            duckName = "";
-            duckNameColor = Color.yellow;
+        clearDuckNameButton.AddToClassList("settings-button");
+        clearDuckNameButton.AddToClassList("custom-button");
 
-            Debug.Log("[DuckGPT] Name and color cleared");
-        }
-        GUILayout.EndHorizontal();
+        duckNameButtonsContainer.Add(saveDuckNameButton);
+        duckNameButtonsContainer.Add(clearDuckNameButton);
+
+        duckConfig.Add(duckConfigLabel);
+        duckConfig.Add(experienceLevelLabel);
+        duckConfig.Add(experienceLevelPopup);
+        duckConfig.Add(experienceLevelButtonsContainer);
+        duckConfig.Add(duckAppearance);
+        duckConfig.Add(duckNameContainer);
+        duckConfig.Add(duckNameColorField);
+        duckConfig.Add(duckNameButtonsContainer);
+
         #endregion
 
-        GUILayout.Space(20);
-        GUILayout.Label("PROJECT ANALYSIS SETTINGS", EditorStyles.largeLabel);
-        GUILayout.Space(5);
-
-        #region FOLDER SELECTION FOR ANALYSIS
-        GUILayout.Label("Folders to Include in Analysis", EditorStyles.boldLabel);
-        GUILayout.Label("Select which folders should be analyzed");
-
-        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-        folderScrollPosition = EditorGUILayout.BeginScrollView(folderScrollPosition, GUILayout.Height(150));
-
-        for (int i = 0; i < includedFolders.Count; i++)
+        #region Project Analysis Settings
+        VisualElement analysisConfig = new()
         {
-            EditorGUILayout.BeginHorizontal();
+            name = "AnalysisConfig"
+        };
+        Label analysisConfigLabel = new("PROJECT SCAN SETTINGS")
+        {
+            name = "SectionLabel"
+        };
+        Label folderSelectionLabel = new("Folders to Include in Full Project Scan:");
 
-            // Folder field
-            string newPath = EditorGUILayout.TextField(includedFolders[i]);
-            if (newPath != includedFolders[i])
-            {
-                includedFolders[i] = newPath;
-            }
+        folderListContainer = new VisualElement { name = "FolderListContainer" };
 
-            // Browse button
-            if (GUILayout.Button("Browse", GUILayout.Width(60)))
-            {
-                string selectedPath = EditorUtility.OpenFolderPanel("Select Folder to Analyze", "Assets", "");
-                if (!string.IsNullOrEmpty(selectedPath))
-                {
-                    // Convert absolute path to relative Assets path
-                    if (selectedPath.Contains(Application.dataPath))
-                    {
-                        selectedPath = "Assets" + selectedPath.Substring(Application.dataPath.Length);
-                        includedFolders[i] = selectedPath;
-                    }
-                }
-            }
-            if (GUILayout.Button("✕", GUILayout.Width(25)))
-            {
-                includedFolders.RemoveAt(i);
-                i--;
-            }
+        ScrollView folderScrollView = new()
+        {
+            contentContainer = { } 
+        };
+        folderScrollView.Add(folderListContainer);
 
-            EditorGUILayout.EndHorizontal();
-        }
-
-        EditorGUILayout.EndScrollView();
-        EditorGUILayout.EndVertical();
-
-        if (GUILayout.Button("+ Add Folder"))
+        Button addFolderButton = new(() =>
         {
             includedFolders.Add("Assets/");
-        }
+            RebuildFolderList(); // refresh UI
+        })
+        {
+            text = "+ Add Folder"
+        };
+        addFolderButton.AddToClassList("custom-button");
 
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Save"))
+        VisualElement folderButtonsContainer = new()
+        {
+            name = "FolderButtonsContainer",
+        };
+        folderButtonsContainer.AddToClassList("buttons-container");
+
+        Button saveFoldersButton = new(() =>
         {
             SaveIncludedFolders();
             ScriptsHandler.ClearAnalysisCache();
-            Debug.Log("[DuckGPT] Folder settings saved. Analysis cache cleared.");
-        }
-        if (GUILayout.Button("Reset"))
+            DebugColor.Log("[DuckGPT] Folder settings saved. Analysis cache cleared.", "yellow");
+        })
+        {
+            text = "Save"
+        };
+        saveFoldersButton.AddToClassList("settings-button");
+        saveFoldersButton.AddToClassList("custom-button");
+
+        Button resetFoldersButton = new(() =>
         {
             includedFolders = new List<string> { "Assets/" };
             SaveIncludedFolders();
-            Debug.Log("[DuckGPT] Folder settings reset to defaults.");
-        }
-        GUILayout.EndHorizontal();
+            ScriptsHandler.ClearAnalysisCache();
+            DebugColor.Log("[DuckGPT] Folder settings reset to defaults.", "blue");
+            RebuildFolderList(); // refresh UI
+        })
+        {
+            text = "Reset"
+        };
+        resetFoldersButton.AddToClassList("settings-button");
+        resetFoldersButton.AddToClassList("custom-button");
 
-        // Current folder count
-        GUILayout.Label($"Currently analyzing {includedFolders.Count} folder(s)", EditorStyles.miniLabel);
+        folderButtonsContainer.Add(saveFoldersButton);
+        folderButtonsContainer.Add(resetFoldersButton);
+
+        analysisConfig.Add(analysisConfigLabel);
+        analysisConfig.Add(folderSelectionLabel);
+        analysisConfig.Add(folderScrollView);
+        analysisConfig.Add(addFolderButton);
+        analysisConfig.Add(folderButtonsContainer);
+
         #endregion
-    }
-    #endregion
 
-    #region Cache Management Tab
-    private void DrawCacheManagementTab()
-    {
-        GUILayout.Label("DuckGPT Cache Management", EditorStyles.largeLabel);
-        GUILayout.Space(10);
+        #region Cache Management Tab
+        VisualElement cacheManagement = new()
+        {
+            name = "CacheManagement"
+        };
 
-        GUILayout.Label("Cache Management", EditorStyles.boldLabel);
-        GUILayout.Space(5);
-
-        if (GUILayout.Button("Clear Chat History", GUILayout.Height(30)))
+        Label cacheManagementLabel = new("DuckGPT Cache Management")
+        {
+            name = "SectionLabel"
+        };
+        Button clearChatHistoryButton = new(() =>
         {
             ChatMemory.Clear();
-            DebugColor.Log("[DuckGPT] Chat history cleared.", "Yellow");
-        }
-
-        if (GUILayout.Button("Clear Hierarchy Cache", GUILayout.Height(30)))
+            DebugColor.Log("[DuckGPT] Chat history cleared.", "yellow");
+        })
+        {
+            text = "Clear Chat History"
+        };
+        clearChatHistoryButton.AddToClassList("custom-button");
+        Button clearHierarchyCacheButton = new(() =>
         {
             HierarchyMemory.MenuClearCache();
-            DebugColor.Log("[DuckGPT] Hierarchy cache cleared.", "Yellow");
-        }
+            DebugColor.Log("[DuckGPT] Hierarchy cache cleared.", "yellow");
+        })
+        {
+            text = "Clear Hierarchy Cache"
+        };
+        clearHierarchyCacheButton.AddToClassList("custom-button");
 
-        if (GUILayout.Button("Clear Analysis Cache", GUILayout.Height(30)))
+        Button clearAnalysisCacheButton = new(() =>
         {
             ScriptsHandler.ClearAnalysisCache();
-            DebugColor.Log("[DuckGPT] Analysis cache cleared.", "Yellow");
-        }
-
-        GUILayout.Space(10);
-
-        if (GUILayout.Button("Clear All Caches", GUILayout.Height(35)))
+            DebugColor.Log("[DuckGPT] Analysis cache cleared.", "yellow");
+        })
         {
-            if (EditorUtility.DisplayDialog("Clear All Caches",
-                "Are you sure you want to clear all DuckGPT caches?\n\n" +
-                "This will clear:\n" +
-                "Chat History\n" +
-                "Hierarchy Cache\n" +
-                "Analysis Cache",
-                "Yes", "Cancel"))
+            text = "Clear Analysis Cache"
+        };
+        clearAnalysisCacheButton.AddToClassList("custom-button");
+        cacheManagement.Add(cacheManagementLabel);
+        cacheManagement.Add(clearChatHistoryButton);
+        cacheManagement.Add(clearHierarchyCacheButton);
+        cacheManagement.Add(clearAnalysisCacheButton);
+
+        #endregion
+
+
+
+        settingsTab.Add(aiConfig);
+        settingsTab.Add(duckConfig);
+        settingsTab.Add(analysisConfig);
+
+        cacheManagementTab.Add(cacheManagement);
+
+        RebuildFolderList();
+
+    }
+
+
+    private void RebuildFolderList()
+    {
+        if (folderListContainer == null) return;
+
+        folderListContainer.Clear();
+
+        for (int i = 0; i < includedFolders.Count; i++)
+        {
+            int index = i;
+            string path = includedFolders[index];
+
+            VisualElement row = new()
             {
-                ChatMemory.Clear();
-                HierarchyMemory.MenuClearCache();
-                ScriptsHandler.ClearAnalysisCache();
-                DebugColor.Log("[DuckGPT] All caches cleared.", "Yellow");
-            }
+                style =
+                {
+                    flexDirection = FlexDirection.Row,
+                    marginBottom = 2
+                }
+            };
+
+            TextField pathField = new()
+            {
+                value = path
+            };
+            pathField.style.flexGrow = 1;
+            pathField.RegisterValueChangedCallback(evt =>
+            {
+                includedFolders[index] = evt.newValue;
+            });
+            row.Add(pathField);
+
+            Button browseBtn = new(() =>
+            {
+                string selectedPath = EditorUtility.OpenFolderPanel(
+                    "Select Folder to Analyze", "Assets", "");
+                if (!string.IsNullOrEmpty(selectedPath) &&
+                    selectedPath.Contains(Application.dataPath))
+                {
+                    selectedPath = "Assets" + selectedPath.Substring(Application.dataPath.Length);
+                    includedFolders[index] = selectedPath;
+                    pathField.value = selectedPath;
+                }
+            })
+            {
+                text = "Browse"
+            };
+            browseBtn.style.width = 70;
+            browseBtn.AddToClassList("custom-button");
+            row.Add(browseBtn);
+
+            Button removeBtn = new(() =>
+            {
+                includedFolders.RemoveAt(index);
+                RebuildFolderList();
+            })
+            {
+                text = "✕"
+            };
+            removeBtn.style.width = 25;
+            removeBtn.AddToClassList("custom-button");
+            row.Add(removeBtn);
+
+            folderListContainer.Add(row);
         }
     }
-    #endregion
+
+   
 
     #region Get Saved Configurations
     public static string GetSavedName() => EditorPrefs.GetString(DuckNamePref, "");

@@ -4,13 +4,12 @@
     position: relative;
     flex-direction: column;
     -unity-font-definition: none;
-        background-color: rgb(0, 20, 120);
-    -unity-font: url("project://database/Assets/Editor/DuckGPT/Font/tahoma.ttf");
+    background-color: rgb(0, 20, 120);
+    -unity-font: url("project://database/Assets/Editor/DuckGPT/Font/W95FA.ttf");
     font-size: 20px;
 }
 
 /* TITLE BAR*/
-
 .title-bar-container{
     position: relative;
     flex-direction: row;
