@@ -42,6 +42,3 @@ DuckGPT also includes optional text-to-speech responses powered by ElevenLabs.
 ### Configuration Window
 <img width="444" height="475" alt="VisualElement duckVisual(37)" src="https://github.com/user-attachments/assets/e8bdd278-19db-4859-8358-43ba5478d0f3" />
 
-### Custom animations for context gathering 
-![Orange and Grey Y2k Retro Creative Portfolio Presentation](https://github.com/user-attachments/assets/977928ef-8969-4082-94e1-4f050e373fec)
-
