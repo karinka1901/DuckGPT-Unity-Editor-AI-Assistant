@@ -1,0 +1,112 @@
+{
+  "sceneName": "SampleScene",
+  "scenePath": "Assets/MyTestProject/Scenes/SampleScene.unity",
+  "rootObjects": [
+    {
+      "name": "Main Camera",
+      "activeSelf": true,
+      "activeInHierarchy": true,
+      "tag": "MainCamera",
+      "layer": "Default",
+      "components": [
+        "Transform",
+        "Camera (enabled=True)",
+        "AudioListener (enabled=True)",
+        "UniversalAdditionalCameraData (enabled=True)"
+      ],
+      "children": [],
+      "lastModified": 1772283419733
+    },
+    {
+      "name": "Directional Light",
+      "activeSelf": true,
+      "activeInHierarchy": true,
+      "tag": "Untagged",
+      "layer": "Default",
+      "components": [
+        "Transform",
+        "Light (enabled=True)",
+        "UniversalAdditionalLightData (enabled=True)"
+      ],
+      "children": [
+        {
+          "name": "GameObject",
+          "activeSelf": true,
+          "activeInHierarchy": true,
+          "tag": "Untagged",
+          "layer": "Default",
+          "components": [
+            "Transform"
+          ],
+          "children": [],
+          "lastModified": 1772283419733
+        }
+      ],
+      "lastModified": 1772283419733
+    },
+    {
+      "name": "Plane",
+      "activeSelf": true,
+      "activeInHierarchy": true,
+      "tag": "Untagged",
+      "layer": "Default",
+      "components": [
+        "Transform",
+        "MeshFilter",
+        "MeshRenderer (enabled=True)",
+        "MeshCollider"
+      ],
+      "children": [],
+      "lastModified": 1772283419733
+    },
+    {
+      "name": "Cube",
+      "activeSelf": true,
+      "activeInHierarchy": true,
+      "tag": "Untagged",
+      "layer": "Default",
+      "components": [
+        "Transform",
+        "MeshFilter",
+        "MeshRenderer (enabled=True)",
+        "BoxCollider"
+      ],
+      "children": [],
+      "lastModified": 1772283419733
+    },
+    {
+      "name": "Sphere",
+      "activeSelf": true,
+      "activeInHierarchy": true,
+      "tag": "Untagged",
+      "layer": "Default",
+      "components": [
+        "Transform",
+        "MeshFilter",
+        "MeshRenderer (enabled=True)",
+        "SphereCollider"
+      ],
+      "children": [],
+      "lastModified": 1772283419733
+    },
+    {
+      "name": "Capsule",
+      "activeSelf": true,
+      "activeInHierarchy": true,
+      "tag": "Untagged",
+      "layer": "Default",
+      "components": [
+        "Transform",
+        "MeshFilter",
+        "MeshRenderer (enabled=True)",
+        "CapsuleCollider",
+        "Rigidbody",
+        "TestScriptOne (enabled=True)"
+      ],
+      "children": [],
+      "lastModified": 1772283419733
+    }
+  ],
+  "lastCacheTime": 1772283419733,
+  "hierarchyHash": "2117044901"
+}
