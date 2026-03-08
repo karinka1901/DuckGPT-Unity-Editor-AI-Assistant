@@ -32,12 +32,19 @@ public class SceneHierarchyCache
     public long lastCacheTime;
     public String hierarchyHash;
 }
-
+/// <summary>
+/// Provides static methods for managing and retrieving information about the Unity scene hierarchy, including tracking
+/// changes and caching hierarchy data for efficient access.
+/// </summary>
+/// <remarks>HierarchyMemory monitors Unity Editor events to detect changes in the scene hierarchy and maintains a
+/// cache of the current state. The cache is persisted as a JSON file in the ProjectSettings directory, enabling quick
+/// retrieval of hierarchy context or specific GameObject information. This class is intended for use within the Unity
+/// Editor and is not suitable for runtime environments.</remarks>
 public static class HierarchyMemory
 {
-    private static readonly Regex QuotedNameRegex = new(@"[""']([^""']+)[""']", RegexOptions.Compiled);
+    private static readonly Regex QuotedNameRegex = new(@"[""']([^""']+)[""']", RegexOptions.Compiled); // Regex to match quoted names in the format "name" or 'name'
 
-    private static SceneHierarchyCache currentCache;
+    private static SceneHierarchyCache sceneHierarchyCache;
     private static bool isSubscribed;
 
     private static String CacheFilePath =>
@@ -73,7 +80,7 @@ public static class HierarchyMemory
 
     private static void OnSceneUnloaded(Scene scene)
     {
-        currentCache = null;
+        sceneHierarchyCache = null;
     }
 
     private static void OnPlayModeChanged(PlayModeStateChange state)
@@ -89,7 +96,7 @@ public static class HierarchyMemory
     {
         EnsureCacheLoaded();
 
-        if (currentCache == null || HasHierarchyChanged())
+        if (sceneHierarchyCache == null || HasHierarchyChanged())
         {
             RefreshCache();
             return FormatHierarchyContext();
@@ -106,14 +113,14 @@ public static class HierarchyMemory
         return FormatHierarchyContext();
     }
 
-    public static String GetGameObjectContext(String prompt)
+    public static String GetGameObjectContext(String prompt) // Retrieves context information about GameObjects mentioned in the provided prompt, based on the cached scene hierarchy data.
     {
         if (String.IsNullOrWhiteSpace(prompt))
             return "";
 
         EnsureCacheLoaded();
 
-        if (currentCache?.rootObjects == null || currentCache.rootObjects.Count == 0)
+        if (sceneHierarchyCache?.rootObjects == null || sceneHierarchyCache.rootObjects.Count == 0) // If the cache is not available or empty, return an empty string as context.
             return "";
 
         List<String> mentionedObjects = ExtractGameObjectNames(prompt)
@@ -143,10 +150,10 @@ public static class HierarchyMemory
             context.AppendLine($"  Components: {String.Join(", ", objectData.components)}");
         }
 
-        return foundAny ? context.ToString() : "";
+        return foundAny ? context.ToString() : ""; 
     }
 
-    private static void RefreshCache()
+    private static void RefreshCache() // Rebuilds the scene hierarchy cache by capturing the current state of the active scene and saving it to disk. 
     {
         try
         {
@@ -154,16 +161,16 @@ public static class HierarchyMemory
             if (newCache == null)
                 return;
 
-            currentCache = newCache;
+            sceneHierarchyCache = newCache;
             SaveCache();
         }
         catch (Exception exception)
         {
-            Debug.LogWarning($"DuckGPT: Failed to update hierarchy cache: {exception.Message}");
+            Debug.LogWarning($"[DuckGPT]: Failed to update hierarchy cache: {exception.Message}");
         }
     }
 
-    private static SceneHierarchyCache BuildCacheForActiveScene()
+    private static SceneHierarchyCache BuildCacheForActiveScene() // Constructs a new SceneHierarchyCache object by capturing the current state of the active scene
     {
         Scene scene = SceneManager.GetActiveScene();
         if (!scene.IsValid())
@@ -245,32 +252,32 @@ public static class HierarchyMemory
 
     private static bool HasHierarchyChanged()
     {
-        if (currentCache == null)
+        if (sceneHierarchyCache == null)
             return true;
 
         Scene scene = SceneManager.GetActiveScene();
         if (!scene.IsValid())
             return false;
 
-        if (currentCache.sceneName != scene.name)
+        if (sceneHierarchyCache.sceneName != scene.name)
             return true;
 
-        if (currentCache.scenePath != scene.path)
+        if (sceneHierarchyCache.scenePath != scene.path)
             return true;
 
         GameObject[] currentRootObjects = scene.GetRootGameObjects();
-        return currentRootObjects.Length != currentCache.rootObjects.Count;
+        return currentRootObjects.Length != sceneHierarchyCache.rootObjects.Count;
     }
 
     private static String FormatHierarchyContext()
     {
-        if (currentCache?.rootObjects == null || currentCache.rootObjects.Count == 0)
+        if (sceneHierarchyCache?.rootObjects == null || sceneHierarchyCache.rootObjects.Count == 0)
             return "";
 
         StringBuilder context = new StringBuilder();
-        context.AppendLine($"\nScene Hierarchy ({currentCache.sceneName}):");
+        context.AppendLine($"\nScene Hierarchy ({sceneHierarchyCache.sceneName}):");
 
-        foreach (GameObjectData rootObject in currentCache.rootObjects)
+        foreach (GameObjectData rootObject in sceneHierarchyCache.rootObjects)
             FormatGameObjectContext(context, rootObject, 0);
 
         return context.ToString();
@@ -304,10 +311,10 @@ public static class HierarchyMemory
 
         private static GameObjectData FindGameObjectInCache(String name)
     {
-        if (currentCache?.rootObjects == null)
+        if (sceneHierarchyCache?.rootObjects == null)
             return null;
 
-        foreach (GameObjectData rootObject in currentCache.rootObjects)
+        foreach (GameObjectData rootObject in sceneHierarchyCache.rootObjects)
         {
             GameObjectData foundObject = FindInGameObjectData(rootObject, name);
             if (foundObject != null)
@@ -334,7 +341,7 @@ public static class HierarchyMemory
 
     private static void EnsureCacheLoaded()
     {
-        if (currentCache != null)
+        if (sceneHierarchyCache != null)
             return;
 
         try
@@ -343,16 +350,16 @@ public static class HierarchyMemory
                 return;
 
             String json = File.ReadAllText(CacheFilePath);
-            currentCache = JsonConvert.DeserializeObject<SceneHierarchyCache>(json);
+            sceneHierarchyCache = JsonConvert.DeserializeObject<SceneHierarchyCache>(json);
 
             Scene currentScene = SceneManager.GetActiveScene();
-            if (currentCache?.sceneName != currentScene.name || currentCache?.scenePath != currentScene.path)
-                currentCache = null;
+            if (sceneHierarchyCache?.sceneName != currentScene.name || sceneHierarchyCache?.scenePath != currentScene.path)
+                sceneHierarchyCache = null;
         }
         catch (Exception exception)
         {
             Debug.LogWarning($"DuckGPT: Failed to load hierarchy cache: {exception.Message}");
-            currentCache = null;
+            sceneHierarchyCache = null;
         }
     }
 
@@ -364,7 +371,7 @@ public static class HierarchyMemory
             if (!String.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
 
-            String json = JsonConvert.SerializeObject(currentCache, Formatting.Indented);
+            String json = JsonConvert.SerializeObject(sceneHierarchyCache, Formatting.Indented);
             File.WriteAllText(CacheFilePath, json);
         }
         catch (Exception exception)
