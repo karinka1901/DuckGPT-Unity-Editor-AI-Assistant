@@ -519,17 +519,12 @@ internal class PrimaryEditorWindow : EditorWindow
         }
 
         #region INCLUDE HIERARCHY
-        // Get specific GameObject context if mentioned in prompt
-        string mentionedGameObjectComponents = HierarchyMemory.GetGameObjectContext(questionInput.value);
-        // include only if changes occurred or manually requested
+        string mentionedGameObjectComponents = HierarchyHandler.LookForComponentsInPrompt(questionInput.value);
         if (hierarchySelected)
         {
-            hierarchy = HierarchyMemory.GetFullHierarchyContext();
+            hierarchy = HierarchyHandler.GetHierarchyString();
         }
-        else
-        {
-            hierarchy = HierarchyMemory.GetHierarchyContextIfChanged();
-        }
+ 
         #endregion
 
         #region INCLUDE CONSOLE LOG ERRORS

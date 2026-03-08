@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using Codice.Client.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -131,6 +130,7 @@ public static class ChatMemory
         return conversationMessages.Skip(Math.Max(0, conversationMessages.Count - max)).ToList();
     }
 
+    #region Request Message Building
     // Builds the messages for the next request
     public static List<ChatMessage> BuildRequestMessages(string systemPrompt, string userPrompt, string contextPrompt = null)
     {
@@ -143,17 +143,18 @@ public static class ChatMemory
             }
         };
 
-        // Always include project analysis if present
+        //project analysis injection
         ChatMessage projectAnalysis = chatMessages.FirstOrDefault(m => m.isProjectAnalysis);
         if (projectAnalysis != null)
             request.Add(projectAnalysis);
 
-        // Inject helper context (console, hierarchy, scripts) as a system message
+        // helper context injection 
         if (!string.IsNullOrWhiteSpace(contextPrompt))
             request.Add(new() 
             { 
                 role = "system", 
-                content = contextPrompt });
+                content = contextPrompt 
+            });
 
         var recent = GetRecentMessages();
         request.AddRange(recent);
@@ -163,12 +164,12 @@ public static class ChatMemory
         else
             request.Add(new() { role = "user", content = userPrompt });
 
-        // Debug: log the full request being sent
-        var debugLog = string.Join("\n---\n", request.Select(m => $"[{m.role}]: {m.content}"));
+        //String debugLog = string.Join("\n---\n", request.Select(m => $"[{m.role}]: {m.content}"));
         //DebugColor.Log($"=== ChatMemory: Full request ({request.Count} messages) ===\n{debugLog}", "magenta");
 
         return request;
     }
+    #endregion
 
     private static void Trim() // Trim chat history and trigger summarization if needed
     {
@@ -178,10 +179,9 @@ public static class ChatMemory
             Task.Run(async () => await SummarizeOldMessages(apiKey));
         }
 
-        const int maxPersisted = 200;
+        const int maxPersisted = 200; //absolute max of messages to keep in history including summaries
         if (chatMessages.Count > maxPersisted)
         {
-
             int remove = chatMessages.Count - maxPersisted;
             var removable = chatMessages
                 .Where(m => !m.isProjectAnalysis && !m.isSummary)
@@ -189,8 +189,7 @@ public static class ChatMemory
                 .ToList();
             foreach (var msg in removable)
                 chatMessages.Remove(msg);
-        }
-      
+        } 
     }
 
     // Summarize older messages to compress history
@@ -236,12 +235,12 @@ public static class ChatMemory
         }
     }
 
-    // Create summary using OpenAI API
+    // Create summary using OpenAI API lightweight model 
     private static async Task<string> CreateSummaryAsync(string summaryPrompt, string apiKey = null)
     {
         try
         {
-            apiKey ??= ConfigurationEditorWindow.GetSavedKey(); // Fallback if called directly from main thread
+            if (string.IsNullOrWhiteSpace(apiKey)) apiKey = ConfigurationEditorWindow.GetSavedKey();
             if (string.IsNullOrWhiteSpace(apiKey)) return null;
 
             using HttpClient client = new();
@@ -256,15 +255,15 @@ public static class ChatMemory
                     new { role = "system", content = "You are a helpful assistant that creates concise summaries of technical conversations." },
                     new { role = "user", content = summaryPrompt }
                 },
-                max_tokens = 150,
-                temperature = 0.3
+                max_tokens = 150, //2-4 sentences 
+                temperature = 0.3 //focus on factual summary, less creativity
             };
 
             string json = JsonConvert.SerializeObject(requestData);
             var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
             var response = await client.PostAsync("https://api.openai.com/v1/chat/completions", content);
-            var responseText = await response.Content.ReadAsStringAsync();
+            String responseText = await response.Content.ReadAsStringAsync();
 
             if (response.IsSuccessStatusCode)
             {
@@ -283,7 +282,5 @@ public static class ChatMemory
             return null;
         }
     }
- 
-
 }
 #endif
