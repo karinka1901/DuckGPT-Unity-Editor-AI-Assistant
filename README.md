@@ -13,7 +13,6 @@ An AI-powered rubber duck debugging assistant integrated directly into the Unity
 https://github.com/user-attachments/assets/b5a05b76-b71f-42ee-98ab-60b29e3a4039
 
 ## Overview
-
 DuckGPT brings the concept of rubber duck debugging directly into the Unity Editor. It allows developers to ask questions about their project while the plugin gathers relevant context and provides AI-generated feedback.
 
 The tool can analyze selected C# scripts, console log errors, and the Unity scene hierarchy to help explain issues and suggest possible solutions based on the current state of the project.
