@@ -40,6 +40,55 @@ DuckGPT is currently a **work in progress** and serves as a **proof-of-concept p
 - OpenAI API
 - ElevenLabs Text-to-Speech API
 
+## System Interaction Flow
+```mermaid
+flowchart TB
+    A["Launch DuckGPT"] --> B["GUI Initialisation"]
+    B --> C["Configuration Window Initialisation"] & D["Primary Window Initialisation"]
+
+    C --> E["Plugin configuration<br>API settings and customisation"]
+    E --> F["Save Settings and Close"]
+
+    D --> G["Context selection<br>Hierarchy, Console errors, Scripts, Project Scan"]
+    G --> H["User query submitted"]
+    H --> I["User message saved to the chat memory"]
+
+    I --> J{"Chat memory threshold exceeded?"}
+    J -- YES --> K
+    J -- NO --> M["Prompt assembly<br>(System + user + context)"]
+
+    subgraph BG1["Background task"]
+        K["Summarisation triggered"]
+        L["Summary saved to chat memory"]
+    end
+
+    K --> L
+    L -.-> M
+
+    M --> N["API request to OpenAI"]
+    N --> O["Response received and parsed"]
+    O --> P["Response saved to the chat memory"]
+
+    P --> Q{"Chat memory threshold exceeded?"}
+    Q -- YES --> R
+    Q -- NO --> T{"TTS enabled"}
+
+    subgraph BG2["Background task"]
+        R["Summarisation triggered"]
+        S["Summary saved to chat memory"]
+    end
+
+    R --> S
+    S -.-> T
+
+    T -- YES --> U["API request to ElevenLabs"]
+    U --> V["Voice Playback"]
+
+    T -- NO --> W["Feedback output<br>Chat response, animation"]
+    V --> W
+    W --> G
+```
+
 ## UI/Screenshots
 The user interface is inspired by a retro operating system aesthetic and is built using **Unity UI Toolkit** and **Unity Style Sheets (USS)**. The duck model was created in **Blender** and rendered into a pixel-art style sprite.
 
